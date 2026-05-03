@@ -87,9 +87,9 @@ const proxyOptions = (target) => ({
     }
 });
 
-app.use('/api/auth', createProxyMiddleware(proxyOptions('https://banking-auth-service-qbwp.onrender.com')));
-app.use('/api/users', createProxyMiddleware(proxyOptions('https://banking-user-service.onrender.com')));
-app.use('/api/transaction', createProxyMiddleware(proxyOptions('https://banking-transaction-service.onrender.com')));
+app.use('/api/auth', createProxyMiddleware(proxyOptions(process.env.AUTH_SERVICE_URL || 'http://banking-auth-service:10000')));
+app.use('/api/users', createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'http://banking-user-service:10000')));
+app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL || 'http://banking-transaction-service:10000')));
 
 // RESILIENT HEALTH DASHBOARD
 app.get('/api/health/status', async (req, res) => {
