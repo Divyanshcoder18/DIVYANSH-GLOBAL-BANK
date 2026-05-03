@@ -5,11 +5,11 @@ const authRoutes = require('./routes/auth.routes.js');
 
 const app = express();
 
-// Middlewares
+// Middlewares - CORS MUST BE FIRST
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors());
 
 // Mount all auth routes with the expected prefix
 app.use('/api/auth', authRoutes);
