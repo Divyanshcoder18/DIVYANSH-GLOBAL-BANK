@@ -94,17 +94,20 @@ app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANS
 // RESILIENT HEALTH DASHBOARD
 app.get('/api/health/status', async (req, res) => {
     const results = await Promise.all(SERVICES.map(async (service) => {
+        let lastError = 'Initial sync...';
         for (const url of service.urls) {
             try {
-                const response = await axios.get(`${url}/health`, { timeout: 8000 });
+                // Increased timeout to 10s for reliability
+                const response = await axios.get(`${url}/health`, { timeout: 10000 });
                 if (response.status === 200) {
                     return { name: service.name, status: 'UP', latency: 'Active' };
                 }
             } catch (err) {
-                // Ignore and try next URL
+                lastError = `${url} -> ${err.message}`;
+                // Continue to try the next URL
             }
         }
-        return { name: service.name, status: 'DOWN', latency: 'N/A', error: 'Syncing...' };
+        return { name: service.name, status: 'DOWN', latency: 'N/A', error: lastError };
     }));
 
     res.json({ services: results });
