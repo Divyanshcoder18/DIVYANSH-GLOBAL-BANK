@@ -75,13 +75,16 @@ const SERVICES = [
     { name: 'Audit Service', urls: getUrls('AUDIT_SERVICE_URL', 'http://banking-audit-service:10000', 'https://banking-audit-service.onrender.com') }
 ];
 
-// PROXY ROUTES (Using External for 100% reliability)
+// PROXY ROUTES (Using Direct External Links for 100% reliability)
 const proxyOptions = (target) => ({
     target,
     changeOrigin: true,
     pathRewrite: { '^/api/[^/]+': '' },
     timeout: 60000,
-    proxyTimeout: 60000
+    proxyTimeout: 60000,
+    onProxyRes: (proxyRes) => {
+        proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+    }
 });
 
 app.use('/api/auth', createProxyMiddleware(proxyOptions('https://banking-auth-service-qbwp.onrender.com')));
@@ -107,7 +110,9 @@ app.get('/api/health/status', async (req, res) => {
     res.json({ services: results });
 });
 
-app.get('/health', (req, res) => res.json({ status: 'GATEWAY_UP' }));
+app.get('/health', (req, res) => {
+    res.json({ status: 'GATEWAY_UP', timestamp: new Date() });
+});
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Real-time Gateway Active on ${PORT}`);

@@ -3,7 +3,7 @@ import axios from 'axios';
 // We create a custom instance of Axios
 const API = axios.create({
   // Use the local or production API URL from environment variables
-  baseURL: import.meta.env.VITE_API_URL || 'https://banking-auth-service-qbwp.onrender.com',
+  baseURL: import.meta.env.VITE_API_URL || 'https://banking-gateway-layx.onrender.com/api',
 });
 
 // The INTERCEPTOR
