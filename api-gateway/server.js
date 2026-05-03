@@ -80,7 +80,7 @@ const proxyOptions = (target) => ({
     target,
     changeOrigin: true,
     pathRewrite: { '^/api/[^/]+': '' },
-    timeout: 60000, // Wait 60 seconds
+    timeout: 60000,
     proxyTimeout: 60000
 });
 
