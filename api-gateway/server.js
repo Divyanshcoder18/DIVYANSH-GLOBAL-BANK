@@ -75,17 +75,18 @@ const SERVICES = [
     { name: 'Audit Service', urls: getUrls('AUDIT_SERVICE_URL', 'http://banking-audit-service:10000', 'https://banking-audit-service.onrender.com') }
 ];
 
-// PROXY ROUTES (Using Internal)
+// PROXY ROUTES (Using External for 100% reliability)
 const proxyOptions = (target) => ({
     target,
     changeOrigin: true,
     pathRewrite: { '^/api/[^/]+': '' },
-    timeout: 30000
+    timeout: 60000, // Wait 60 seconds
+    proxyTimeout: 60000
 });
 
-app.use('/api/auth', createProxyMiddleware(proxyOptions(process.env.AUTH_SERVICE_URL || 'http://banking-auth-service:10000')));
-app.use('/api/users', createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'http://banking-user-service:10000')));
-app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL || 'http://banking-transaction-service:10000')));
+app.use('/api/auth', createProxyMiddleware(proxyOptions('https://banking-auth-service-qbwp.onrender.com')));
+app.use('/api/users', createProxyMiddleware(proxyOptions('https://banking-user-service.onrender.com')));
+app.use('/api/transaction', createProxyMiddleware(proxyOptions('https://banking-transaction-service.onrender.com')));
 
 // RESILIENT HEALTH DASHBOARD
 app.get('/api/health/status', async (req, res) => {
