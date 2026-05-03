@@ -11,8 +11,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Mount all auth routes with the expected prefix
+// Mount all auth routes to handle both prefixed and direct requests
 app.use('/api/auth', authRoutes);
+app.use('/', authRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: "AUTH_SERVICE_UP", timestamp: new Date() });
