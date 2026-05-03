@@ -14,7 +14,7 @@ async function authmiddleware(req, res, next) {
         const isblacklisted = await tokenblacklistmodel.findOne({ token });
         if (isblacklisted) return res.status(401).json({ message: "unauthorized access" });
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'divu123');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'BANKING_FORCED_SECRET_999');
         const user = await usermodel.findOne({ _id: decoded.id });
 
         if (!user) return res.status(401).json({ message: "unauthorized access" });
