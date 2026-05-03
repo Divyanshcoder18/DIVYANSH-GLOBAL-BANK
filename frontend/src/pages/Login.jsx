@@ -23,7 +23,7 @@ function Login() {
 
     try {
       // 4. THE CALL: Send data to your API Gateway
-      const response = await API.post('/auth/login', { email, password });
+      const response = await API.post('/api/auth/login', { email, password });
 
       // 5. THE SUCCESS: If backend says OK, we update our Global Context
       login(response.data.user, response.data.token);

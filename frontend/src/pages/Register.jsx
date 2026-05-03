@@ -21,7 +21,7 @@ function Register() {
 
     try {
       // 1. REGISTER: Create the user account
-      const response = await API.post('/auth/register', { name, email, password });
+      const response = await API.post('/api/auth/register', { name, email, password });
 
       // 2. AUTO LOGIN: Use the login function to save the new user and token
       login(response.data.user, response.data.token);
