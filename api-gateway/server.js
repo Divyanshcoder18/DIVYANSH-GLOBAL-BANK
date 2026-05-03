@@ -88,8 +88,11 @@ const proxyOptions = (target) => ({
 });
 
 app.use('/api/auth', createProxyMiddleware(proxyOptions(process.env.AUTH_SERVICE_URL || 'https://banking-auth-service-qbwp.onrender.com')));
-app.use('/api/users', createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'http://banking-user-service:10000')));
-app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL || 'http://banking-transaction-service:10000')));
+app.use('/api/users', createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'https://banking-user-service.onrender.com')));
+app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL || 'https://banking-transaction-service.onrender.com')));
+app.use('/api/notification', createProxyMiddleware(proxyOptions(process.env.NOTIFICATION_SERVICE_URL || 'https://banking-notification-service.onrender.com')));
+app.use('/api/fraud', createProxyMiddleware(proxyOptions(process.env.FRAUD_SERVICE_URL || 'https://banking-fraud-service.onrender.com')));
+app.use('/api/audit', createProxyMiddleware(proxyOptions(process.env.AUDIT_SERVICE_URL || 'https://banking-audit-service.onrender.com')));
 
 // RESILIENT HEALTH DASHBOARD
 app.get('/api/health/status', async (req, res) => {
@@ -97,8 +100,8 @@ app.get('/api/health/status', async (req, res) => {
         let lastError = 'Initial sync...';
         for (const url of service.urls) {
             try {
-                // Increased timeout to 10s for reliability
-                const response = await axios.get(`${url}/health`, { timeout: 10000 });
+                // Increased timeout to 20s for slow startups
+                const response = await axios.get(`${url}/health`, { timeout: 20000 });
                 if (response.status === 200) {
                     return { name: service.name, status: 'UP', latency: 'Active' };
                 }
