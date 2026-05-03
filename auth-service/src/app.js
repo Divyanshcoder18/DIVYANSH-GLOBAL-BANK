@@ -9,8 +9,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Mount all auth routes directly (API Gateway handles the /api/auth prefix)
-app.use('/', authRoutes);
+// Mount all auth routes with the expected prefix
+app.use('/api/auth', authRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: "AUTH_SERVICE_UP", timestamp: new Date() });
