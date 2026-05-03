@@ -4,12 +4,15 @@ const tokenblacklistmodel = require('../models/blacklistmodel.js');
 const { sendregiseremail } = require('../services/email.services.js');
 
 const Redis = require('ioredis');
-const redisClient = process.env.REDIS_URL
-    ? new Redis(process.env.REDIS_URL)
-    : new Redis({
-        host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379,
-    });
+const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+    maxRetriesPerRequest: 1,
+    connectTimeout: 5000, // Stop trying after 5 seconds
+    reconnectOnError: () => false
+});
+
+redisClient.on('error', (err) => {
+    console.log("[REDIS] Connection failed, but server will continue:", err.message);
+});
 
 const userregistercontroller = async (req, res) => {
     try {
