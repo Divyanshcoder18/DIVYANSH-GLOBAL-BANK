@@ -108,6 +108,6 @@ app.get('/api/health/status', async (req, res) => {
 
 app.get('/health', (req, res) => res.json({ status: 'GATEWAY_UP' }));
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Real-time Gateway Active on ${PORT}`);
 });

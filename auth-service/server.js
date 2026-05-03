@@ -6,8 +6,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/banking-s
     .then(() => {
         console.log("✅ Auth Service Database Connected");
 
-        const PORT = process.env.PORT || 5002;
-        app.listen(PORT, () => {
+        const PORT = process.env.PORT || 10000;
+        app.listen(PORT, '0.0.0.0', () => {
             console.log(`🚀 Auth Service is running on port ${PORT}`);
         });
     })
