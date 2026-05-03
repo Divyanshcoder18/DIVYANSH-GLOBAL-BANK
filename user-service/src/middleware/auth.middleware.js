@@ -8,14 +8,14 @@ async function authmiddleware(req, res, next) {
 
     if (!token) {
         console.log("❌ [USER-SERVICE] Auth Failed: No token");
-        return res.status(401).json({ message: "unauthorized access" });
+        return res.status(401).json({ message: "unauthorized access", debug: "no_token" });
     }
 
     try {
         const isblacklisted = await tokenblacklistmodel.findOne({ token });
         if (isblacklisted) {
             console.log("❌ [USER-SERVICE] Auth Failed: Token blacklisted");
-            return res.status(401).json({ message: "unauthorized access" });
+            return res.status(401).json({ message: "unauthorized access", debug: "token_blacklisted" });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'divu123');
@@ -23,7 +23,7 @@ async function authmiddleware(req, res, next) {
 
         if (!user) {
             console.log(`❌ [USER-SERVICE] Auth Failed: User ${decoded.id} not found in DB`);
-            return res.status(401).json({ message: "unauthorized access" });
+            return res.status(401).json({ message: "unauthorized access", debug: "user_not_found_in_db" });
         }
 
         console.log(`✅ [USER-SERVICE] Auth Success: User ${user.email}`);
@@ -31,7 +31,7 @@ async function authmiddleware(req, res, next) {
         next();
     } catch (error) {
         console.log("❌ [USER-SERVICE] Auth Failed: JWT Verify Error", error.message);
-        return res.status(401).json({ message: "unauthorized access" });
+        return res.status(401).json({ message: "unauthorized access", debug: `jwt_error: ${error.message}` });
     }
 }
 
