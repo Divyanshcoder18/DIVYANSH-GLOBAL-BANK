@@ -67,7 +67,7 @@ const getUrls = (key, defaultInternal, defaultExternal) => [
 ];
 
 const SERVICES = [
-    { name: 'Auth Service', urls: getUrls('AUTH_SERVICE_URL', 'http://banking-auth-service:10000', 'https://banking-auth-service.onrender.com') },
+    { name: 'Auth Service', urls: getUrls('AUTH_SERVICE_URL', 'http://banking-auth-service:10000', 'https://banking-auth-service-qbwp.onrender.com') },
     { name: 'User Service', urls: getUrls('USER_SERVICE_URL', 'http://banking-user-service:10000', 'https://banking-user-service.onrender.com') },
     { name: 'Transaction Service', urls: getUrls('TRANSACTION_SERVICE_URL', 'http://banking-transaction-service:10000', 'https://banking-transaction-service.onrender.com') },
     { name: 'Notification Service', urls: getUrls('NOTIFICATION_SERVICE_URL', 'http://banking-notification-service:10000', 'https://banking-notification-service.onrender.com') },
@@ -87,7 +87,7 @@ const proxyOptions = (target) => ({
     }
 });
 
-app.use('/api/auth', createProxyMiddleware(proxyOptions(process.env.AUTH_SERVICE_URL || 'https://banking-auth-service.onrender.com')));
+app.use('/api/auth', createProxyMiddleware(proxyOptions(process.env.AUTH_SERVICE_URL || 'https://banking-auth-service-qbwp.onrender.com')));
 app.use('/api/users', createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'https://banking-user-service.onrender.com')));
 app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL || 'https://banking-transaction-service.onrender.com')));
 app.use('/api/notification', createProxyMiddleware(proxyOptions(process.env.NOTIFICATION_SERVICE_URL || 'https://banking-notification-service.onrender.com')));
