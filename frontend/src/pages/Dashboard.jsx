@@ -109,7 +109,8 @@ function Dashboard() {
         setTransactions(historyRes.data);
       }
     } catch (err) {
-      toast.error("Could not load bank data.");
+      const debugMsg = err.response?.data?.debug || "No debug info";
+      toast.error(`Could not load bank data. Reason: ${debugMsg}`);
       console.error("Dashboard Fetch Error:", err);
     } finally {
       setLoading(false);
