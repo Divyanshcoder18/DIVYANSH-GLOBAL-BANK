@@ -30,7 +30,7 @@ const userregistercontroller = async (req, res) => {
 
         const user = await usermodel.create({ email, password, name, vpa });
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'divu123', { expiresIn: "24d" });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'banking_system_super_secret_2026', { expiresIn: "24d" });
         res.cookie("token", token);
 
         res.status(201).json({
