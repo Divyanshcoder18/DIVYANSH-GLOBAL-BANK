@@ -94,6 +94,14 @@ function Login() {
             Register now
           </Link>
         </p>
+
+        {/* COMPLIANCE FOOTER FOR RAZORPAY */}
+        <div className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-slate-800 pt-8 text-[10px] font-bold uppercase tracking-widest text-slate-600">
+          <Link to="/terms" className="hover:text-blue-400 transition-colors">Terms</Link>
+          <Link to="/privacy" className="hover:text-blue-400 transition-colors">Privacy</Link>
+          <Link to="/refund" className="hover:text-blue-400 transition-colors">Refund</Link>
+          <Link to="/contact" className="hover:text-blue-400 transition-colors">Contact</Link>
+        </div>
       </motion.div>
     </div>
   );
