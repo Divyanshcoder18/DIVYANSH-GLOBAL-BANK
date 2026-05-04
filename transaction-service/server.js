@@ -3,18 +3,14 @@ const mongoose = require('mongoose');
 const app = require('./src/app.js');
 const { connectRabbitMQ } = require('./src/utils/producer.js');
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/banking-system')
-    .then(async () => {
-        console.log("✅ Transaction Service Database Connected");
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Transaction Service listening on port ${PORT}`);
 
-        // Connect to RabbitMQ for event publishing
-        await connectRabbitMQ();
-
-        const PORT = process.env.PORT || 5001;
-        app.listen(PORT, () => {
-            console.log(`🚀 Transaction Service is running on port ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.error("❌ Transaction Service Initialization Error:", err);
-    });
+    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/banking-system')
+        .then(async () => {
+            console.log("✅ Transaction Service Database Connected");
+            await connectRabbitMQ();
+        })
+        .catch((err) => console.error("❌ Transaction Service DB Error:", err));
+});

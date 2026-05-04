@@ -3,17 +3,14 @@ const mongoose = require('mongoose');
 const app = require('./src/app.js');
 const { connectRabbitMQ } = require('./src/utils/consumer.js');
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/banking-system')
-    .then(() => {
-        console.log("✅ User Service Database Connected");
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 User Service listening on port ${PORT}`);
 
-        connectRabbitMQ();
-
-        const PORT = process.env.PORT || 5003;
-        app.listen(PORT, () => {
-            console.log(`🚀 User Service is running on port ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.error("❌ User Service Initialization Error:", err);
-    });
+    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/banking-system')
+        .then(() => {
+            console.log("✅ User Service Database Connected");
+            connectRabbitMQ();
+        })
+        .catch((err) => console.error("❌ User Service DB Error:", err));
+});
