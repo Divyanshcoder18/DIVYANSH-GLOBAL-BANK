@@ -7,7 +7,7 @@ app.use(express.json());
 
 // FIXED HEALTH CHECK FOR GATEWAY
 app.get('/health', (req, res) => {
-    res.status(200).send('OK');
+    res.json({ status: 'UP' });
 });
 
 const PORT = process.env.PORT || 10000;

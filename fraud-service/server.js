@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'UP', service: 'fraud' });
+    res.json({ status: 'UP' });
 });
 
 const PORT = process.env.PORT || 10000;
