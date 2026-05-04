@@ -100,6 +100,7 @@ function Login() {
           <Link to="/terms" className="hover:text-blue-400 transition-colors">Terms</Link>
           <Link to="/privacy" className="hover:text-blue-400 transition-colors">Privacy</Link>
           <Link to="/refund" className="hover:text-blue-400 transition-colors">Refund</Link>
+          <Link to="/shipping" className="hover:text-blue-400 transition-colors">Shipping</Link>
           <Link to="/contact" className="hover:text-blue-400 transition-colors">Contact</Link>
         </div>
       </motion.div>

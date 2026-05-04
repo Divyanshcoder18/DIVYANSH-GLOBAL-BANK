@@ -9,6 +9,7 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Refund from './pages/Refund';
 import Contact from './pages/Contact';
+import Shipping from './pages/Shipping';
 
 function App() {
   const { user, loading } = useAuth(); // We "turn on the tap" to get 'user' and 'loading'
@@ -36,6 +37,7 @@ function App() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/refund" element={<Refund />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/shipping" element={<Shipping />} />
 
       {/* 4. DEFAULT: Any other URL redirects to login or dashboard depending on status */}
       <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
