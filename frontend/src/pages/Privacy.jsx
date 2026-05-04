@@ -1,11 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Shield, Database, UserCheck } from 'lucide-react';
+import { Eye, Shield, Database, UserCheck, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 function Privacy() {
   return (
     <div className="min-h-screen bg-slate-950 text-white py-20 px-4">
       <div className="max-w-3xl mx-auto">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
+        >
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Home</span>
+        </Link>
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

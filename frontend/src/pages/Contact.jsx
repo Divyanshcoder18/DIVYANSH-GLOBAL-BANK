@@ -1,11 +1,19 @@
 import React from 'react';
-import { Mail, MapPin, Phone, MessageSquare } from 'lucide-react';
+import { Mail, MapPin, Phone, MessageSquare, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 function Contact() {
   return (
     <div className="min-h-screen bg-slate-950 text-white py-20 px-4">
       <div className="max-w-4xl mx-auto">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
+        >
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Home</span>
+        </Link>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -27,7 +35,7 @@ function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Email Us</h3>
-                  <p className="text-slate-400 text-sm">support@apexbank.example.com</p>
+                  <p className="text-slate-400 text-sm">support@apexglobal.bank</p>
                   <p className="text-slate-500 text-xs mt-1">Response time: &lt; 2 hours</p>
                 </div>
               </div>
@@ -40,8 +48,8 @@ function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">Office Address</h3>
-                  <p className="text-slate-400 text-sm">Financial District, Sector 62</p>
-                  <p className="text-slate-400 text-sm">Noida, Uttar Pradesh, India</p>
+                  <p className="text-slate-400 text-sm">District Kangra, Himachal Pradesh</p>
+                  <p className="text-slate-400 text-sm">Pin: 176022, India</p>
                 </div>
               </div>
             </div>
