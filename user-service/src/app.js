@@ -26,7 +26,7 @@ app.use('/', accountRoutes);
 app.use('/info', userRoutes);
 
 app.get('/health', (req, res) => {
-    res.json({ status: "USER_SERVICE_UP", timestamp: new Date() });
+    res.json({ status: "UP" });
 });
 
 module.exports = app;

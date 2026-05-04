@@ -16,12 +16,7 @@ app.use('/', authRoutes);
 
 app.get('/health', (req, res) => {
     const dbStatus = mongoose.connection.readyState === 1 ? "CONNECTED" : "DISCONNECTED";
-    res.json({ 
-        version: "DIAGNOSTIC_v1",
-        status: "AUTH_SERVICE_UP", 
-        database: dbStatus,
-        timestamp: new Date() 
-    });
+    res.json({ status: "UP" });
 });
 
 module.exports = app;

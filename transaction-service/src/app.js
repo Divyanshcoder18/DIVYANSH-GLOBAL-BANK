@@ -13,7 +13,7 @@ app.use(cookieParser());
 app.use('/', transactionRoutes);
 
 app.get('/health', (req, res) => {
-    res.json({ status: "TRANSACTION_SERVICE_UP", timestamp: new Date() });
+    res.json({ status: "UP" });
 });
 
 module.exports = app;

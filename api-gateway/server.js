@@ -117,7 +117,7 @@ app.get('/api/health/status', async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'GATEWAY_UP', timestamp: new Date() });
+    res.json({ status: 'UP' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
