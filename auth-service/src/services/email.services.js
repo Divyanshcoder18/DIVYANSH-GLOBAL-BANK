@@ -12,20 +12,16 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// No transporter.verify() here anymore - it causes startup hangs!
-
 const sendEmail = async (to, subject, text, html) => {
-    // If we don't have credentials, don't even try - prevents timeouts!
     if (!process.env.EMAIL_USER || !process.env.REFRESH_TOKEN) {
         console.log("[EMAIL] Skipping: Missing credentials");
         return;
     }
 
     try {
-        // Set a strict 3-second timeout so it never clogs the server!
         const info = await Promise.race([
             transporter.sendMail({
-                from: `"Apex Global Bank" <${process.env.EMAIL_USER}>`,
+                from: `"Apex Digital Portfolio" <${process.env.EMAIL_USER}>`,
                 to,
                 subject,
                 text,
@@ -40,11 +36,10 @@ const sendEmail = async (to, subject, text, html) => {
 };
 
 async function sendregiseremail(useremail, name) {
-    const subj = "Welcome to Apex Global Bank!";
-    const text = `Hello ${name}, your journey with Apex Global Bank begins today!`;
-    const html = `<h1>Hello ${name},</h1><p>Welcome to <b>Apex Global Bank</b>. Your digital account is now active!</p>`;
+    const subj = "Welcome to Apex Digital Portfolio!";
+    const text = `Hello ${name}, thank you for exploring my IT Portfolio simulation!`;
+    const html = `<h1>Hello ${name},</h1><p>Welcome to <b>Apex Digital Portfolio</b>. Your simulation profile is now active! Feel free to explore the features.</p>`;
     
-    // We don't await here to ensure zero-blockage
     sendEmail(useremail, subj, text, html);
 }
 

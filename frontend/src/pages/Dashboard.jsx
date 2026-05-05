@@ -43,9 +43,9 @@ function Dashboard() {
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
-    doc.text('APEX GLOBAL BANK', 14, 25);
+    doc.text('APEX DIGITAL PORTFOLIO', 14, 25);
     doc.setFontSize(10);
-    doc.text('Official Transaction Receipt', 14, 32);
+    doc.text('Simulation Transaction Log', 14, 32);
 
     // Transaction Info
     doc.setTextColor(0, 0, 0);
@@ -71,8 +71,8 @@ function Dashboard() {
     // Footer
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
-    doc.text('Thank you for choosing Apex Global Bank.', 14, doc.lastAutoTable.finalY + 20);
-    doc.text('This is a computer-generated document.', 14, doc.lastAutoTable.finalY + 25);
+    doc.text('Thank you for exploring this Portfolio Simulation.', 14, doc.lastAutoTable.finalY + 20);
+    doc.text('This is a simulated document for educational purposes.', 14, doc.lastAutoTable.finalY + 25);
 
     doc.save(`Receipt-${tx._id.slice(-6)}.pdf`);
     toast.success('Receipt downloaded successfully!');
@@ -147,7 +147,7 @@ function Dashboard() {
     return (
       <div className="h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 font-medium">Securing your connection...</p>
+        <p className="text-slate-400 font-medium">Initializing simulator environment...</p>
       </div>
     );
   }
@@ -172,12 +172,12 @@ function Dashboard() {
         {/* HEADER SECTION */}
         <header className="flex justify-between items-center mb-10">
           <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-            <h1 className="text-2xl md:text-3xl font-bold">Good morning, {user?.name.split(' ')[0]}!</h1>
+            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter">Apex Portfolio</h1>
             <div className="flex items-center gap-3 mt-1">
-              <p className="text-slate-400 text-sm">You have {accounts.length} active account(s).</p>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                <ShieldCheck size={12} className="text-emerald-400" />
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">Security: High</span>
+              <p className="text-slate-400 text-sm">You have {accounts.length} active sandbox profile(s).</p>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
+                <ShieldCheck size={12} className="text-blue-400" />
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">Mode: Educational</span>
               </div>
             </div>
           </motion.div>
@@ -188,7 +188,7 @@ function Dashboard() {
               className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-600/20"
             >
               <Plus size={16} />
-              <span>New Account</span>
+              <span>Create Simulator</span>
             </button>
             <button
               onClick={() => fetchDashboardData(true)}
@@ -276,9 +276,9 @@ function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-bold tracking-widest text-white/60 uppercase">
-                    {selectedAccount?.nickname || selectedAccount?.accountType || 'Apex Platinum'}
+                    {selectedAccount?.nickname || selectedAccount?.accountType || 'Apex Demo Card'}
                   </p>
-                  <p className="text-xs text-white/40 tracking-tighter">Debit Card •• {selectedAccount?._id?.slice(-4)}</p>
+                  <p className="text-xs text-white/40 tracking-tighter">Simulation ID •• {selectedAccount?._id?.slice(-4)}</p>
                   <div className="flex items-center gap-2 mt-1 justify-end">
                     <p className="text-[10px] text-white/30 font-mono tracking-tighter">
                       ID: {selectedAccount?._id}
@@ -298,7 +298,7 @@ function Dashboard() {
               </div>
 
               <div className="mt-12">
-                <p className="text-white/70 text-sm font-medium">Available Balance</p>
+                <p className="text-white/70 text-sm font-medium uppercase tracking-widest">Simulator Credits</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-light text-white/50">₹</span>
                   <h2 className="text-5xl md:text-6xl font-bold tracking-tight">
@@ -309,8 +309,8 @@ function Dashboard() {
 
               <div className="mt-8 pt-6 border-t border-white/10 flex gap-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                  <span className="text-xs text-white/80 font-medium">System Secure</span>
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                  <span className="text-xs text-white/80 font-medium tracking-wide uppercase">Simulation Active</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400"></div>

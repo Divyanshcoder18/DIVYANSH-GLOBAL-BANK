@@ -28,7 +28,7 @@ function Login() {
       // 5. THE SUCCESS: If backend says OK, we update our Global Context
       login(response.data.user, response.data.token);
 
-      toast.success('Welcome back to Apex Global Bank!');
+      toast.success('Welcome back to Apex Digital Portfolio!');
       navigate('/dashboard'); // Move to the dashboard automatically
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed. Check credentials.');
@@ -45,8 +45,8 @@ function Login() {
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md w-full bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl"
       >
-        <h2 className="text-3xl font-black text-white mb-2">Sign In</h2>
-        <p className="text-slate-400 mb-8 font-medium">Access your secure banking dashboard.</p>
+        <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">Apex Digital</h2>
+        <p className="text-slate-400 mb-8 font-medium">Educational Financial & IT Portfolio Simulation.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -84,7 +84,7 @@ function Login() {
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-black py-4 rounded-2xl hover:opacity-90 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50"
           >
-            {loading ? 'Processing...' : 'Secure Login'}
+            {loading ? 'Entering Sandbox...' : 'View Portfolio'}
           </button>
         </form>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Shield, Database, UserCheck, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Eye, Lock, Database, ArrowLeft, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function Privacy() {
@@ -14,49 +14,61 @@ function Privacy() {
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span>Back to Home</span>
         </Link>
+
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="inline-block p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 mb-4">
-            <Eye size={32} />
+          <div className="inline-block p-3 bg-blue-500/10 rounded-2xl text-blue-400 mb-4">
+            <Lock size={32} />
           </div>
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-2 uppercase tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
             Privacy Policy
           </h1>
-          <p className="text-slate-400">Your data security is our top priority.</p>
+          <p className="text-slate-400">Project Focus: Educational Security Simulation</p>
         </motion.div>
+
+        {/* IMPORTANT DISCLOSURE */}
+        <div className="mb-8 p-6 bg-blue-600/10 border border-blue-500/30 rounded-3xl flex gap-4 items-start">
+          <Info className="text-blue-400 shrink-0" size={24} />
+          <div>
+            <h3 className="font-bold text-blue-400 uppercase text-xs tracking-widest mb-1">Developer Disclosure</h3>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              This portfolio project demonstrates secure IT architecture. We collect minimal data solely for simulation purposes and do not sell or monetize user information.
+            </p>
+          </div>
+        </div>
 
         {/* Content Section */}
         <div className="space-y-8 text-slate-300 leading-relaxed bg-slate-900/50 p-8 rounded-3xl border border-slate-800 backdrop-blur-xl">
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <Database className="text-indigo-400" size={20} />
+              <Database className="text-blue-400" size={20} />
               <h2 className="text-xl font-semibold text-white">1. Data Collection</h2>
             </div>
-            <p>We collect basic information such as your name, email address, and transaction history to provide you with a seamless banking experience. We do not collect or store your sensitive payment passwords on our servers.</p>
+            <p>We only collect the email and name you provide during simulation registration to create your demo profile. No sensitive financial data (real bank details) is ever requested or stored.</p>
           </section>
 
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <Shield className="text-indigo-400" size={20} />
-              <h2 className="text-xl font-semibold text-white">2. Security Measures</h2>
+              <Eye className="text-blue-400" size={20} />
+              <h2 className="text-xl font-semibold text-white">2. Data Usage</h2>
             </div>
-            <p>All transaction data is encrypted using industry-standard SSL technology. Your session is protected by secure JWT tokens, ensuring that only you can access your personal financial information.</p>
+            <p>Collected data is used only within the simulated environment of this portfolio project to demonstrate features like transaction logging and profile management.</p>
           </section>
 
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <UserCheck className="text-indigo-400" size={20} />
-              <h2 className="text-xl font-semibold text-white">3. Third-Party Sharing</h2>
+              <ShieldCheck className="text-blue-400" size={20} />
+              <h2 className="text-xl font-semibold text-white">3. Security</h2>
             </div>
-            <p>We share necessary data with our payment partner, <strong>Razorpay</strong>, solely for the purpose of processing your transactions. We never sell your personal data to any marketing agencies or third parties.</p>
+            <p>While this is a simulation, we use industry-standard encryption (JWT and Bcrypt) to demonstrate how data would be protected in a production environment.</p>
           </section>
 
           <div className="pt-8 border-t border-slate-800 text-sm text-slate-500 italic text-center">
-            For any privacy-related concerns, please contact our Data Protection Officer at privacy@apexbank.example.com
+            Managed as a Portfolio Project by Divyansh.
           </div>
         </div>
       </div>
