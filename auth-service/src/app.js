@@ -14,9 +14,7 @@ const mongoose = require('mongoose');
 // Simple mount at root (Gateway handles the prefix)
 app.use('/', authRoutes);
 
-app.get('/health', (req, res) => {
-    const dbStatus = mongoose.connection.readyState === 1 ? "CONNECTED" : "DISCONNECTED";
-    res.json({ status: "UP" });
-});
+app.get('/', (req, res) => res.status(200).send('OK'));
+app.get('/health', (req, res) => res.status(200).send('UP'));
 
 module.exports = app;

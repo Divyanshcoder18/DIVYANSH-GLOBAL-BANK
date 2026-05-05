@@ -12,8 +12,7 @@ app.use(cookieParser());
 // Mount all transaction routes directly (API Gateway handles the /api/transaction prefix)
 app.use('/', transactionRoutes);
 
-app.get('/health', (req, res) => {
-    res.json({ status: "UP" });
-});
+app.get('/', (req, res) => res.status(200).send('OK'));
+app.get('/health', (req, res) => res.status(200).send('UP'));
 
 module.exports = app;

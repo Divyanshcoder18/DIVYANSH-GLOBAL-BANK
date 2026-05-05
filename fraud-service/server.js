@@ -6,10 +6,9 @@ const { connectRabbitMQ } = require('./src/utils/consumer.js');
 const app = express();
 app.use(express.json());
 
-// FAST HEALTH CHECK
-app.get('/health', (req, res) => {
-    res.json({ status: 'UP' });
-});
+// FAST HEALTH CHECK (Minimal response size for cron-job.org)
+app.get('/', (req, res) => res.status(200).send('OK'));
+app.get('/health', (req, res) => res.status(200).send('UP'));
 
 const PORT = process.env.PORT || 10000;
 

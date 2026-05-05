@@ -25,8 +25,7 @@ app.use(cookieParser());
 app.use('/', accountRoutes);
 app.use('/info', userRoutes);
 
-app.get('/health', (req, res) => {
-    res.json({ status: "UP" });
-});
+app.get('/', (req, res) => res.status(200).send('OK'));
+app.get('/health', (req, res) => res.status(200).send('UP'));
 
 module.exports = app;
