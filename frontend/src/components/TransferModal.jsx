@@ -63,11 +63,42 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
     ? `upi://pay?pa=${toAccount}&pn=${encodeURIComponent(recipientName || 'External User')}&am=${amount}&cu=INR`
     : '';
 
-  const handleGenerateQR = (e) => {
+  const handleRealUPITransfer = async (e) => {
     e.preventDefault();
     if (!toAccount || !amount) return toast.error("Please fill all fields");
     if (!toAccount.includes('@')) return toast.error("Real UPI transfers require an '@' VPA (e.g. friend@bank)");
-    setStep(2);
+    
+    setLoading(true);
+    try {
+      const res = await API.post('/transaction/instamojo/payment', {
+        amount: parseFloat(amount),
+        accountId: fromAccountId,
+        toAccount: toAccount
+      });
+
+      if (res.data.success && res.data.payment_url) {
+        toast.success("Opening Secure Instamojo payment window!");
+        window.open(res.data.payment_url, '_blank');
+        
+        onSuccess({
+          amount: parseFloat(amount),
+          from: fromAccountId,
+          type: 'TRANSFER_SENT'
+        });
+        
+        // Reset Modal State
+        setStep(1);
+        setToAccount('');
+        setAmount('');
+        onClose();
+      } else {
+        toast.error("Failed to initialize Instamojo gateway");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Instamojo payment failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTransfer = async (e) => {
@@ -290,7 +321,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
                   {transferType === 'UPI' && (
                     <button
                       type="button"
-                      onClick={handleGenerateQR}
+                      onClick={handleRealUPITransfer}
                       disabled={loading}
                       className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 text-sm"
                     >

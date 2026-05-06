@@ -332,7 +332,7 @@ async function checkDepositStatus(req, res) {
                 const ledgerExists = await ledgermodel.findOne({ transaction: txn._id });
                 if (!ledgerExists) {
                     await ledgermodel.create([{ 
-                        account: txn.fromaccount, 
+                        account: txn.toaccount, 
                         amount: txn.amount, 
                         transaction: txn._id, 
                         type: "CREDIT" 
@@ -340,7 +340,7 @@ async function checkDepositStatus(req, res) {
 
                     // Publish redis notification so frontend gets credited live
                     try {
-                        const account = await accountmodel.findById(txn.fromaccount);
+                        const account = await accountmodel.findById(txn.toaccount);
                         redisClient.publish('payment_updates', JSON.stringify({
                             userId: account.user,
                             amount: txn.amount,
@@ -365,7 +365,7 @@ async function checkDepositStatus(req, res) {
 }
 
 async function createInstamojoPayment(req, res) {
-    const { amount, accountId } = req.body;
+    const { amount, accountId, toAccount } = req.body;
     
     if (!amount || !accountId) {
         return res.status(400).json({ success: false, message: "Missing amount or accountId" });
@@ -375,6 +375,27 @@ async function createInstamojoPayment(req, res) {
         const account = await accountmodel.findOne({ _id: accountId, user: req.user.id || req.user._id });
         if (!account) return res.status(404).json({ success: false, message: "Account not found" });
 
+        let targetAccount;
+        let recipientName = "Banking User";
+
+        if (toAccount) {
+            if (toAccount.includes('@')) {
+                const recipientUser = await usermodel.findOne({ vpa: toAccount.toLowerCase() });
+                if (recipientUser) {
+                    targetAccount = await accountmodel.findOne({ user: recipientUser._id });
+                    recipientName = recipientUser.name || toAccount;
+                } else {
+                    recipientName = `External UPI: ${toAccount}`;
+                }
+            } else {
+                targetAccount = await accountmodel.findById(toAccount);
+                if (targetAccount) {
+                    const targetUser = await usermodel.findById(targetAccount.user);
+                    recipientName = targetUser ? targetUser.name : "Unknown";
+                }
+            }
+        }
+
         const isSandbox = process.env.INSTAMOJO_ENV === 'sandbox';
         const endpoint = isSandbox 
             ? 'https://test.instamojo.com/api/1.1/payment-requests/' 
@@ -382,7 +403,7 @@ async function createInstamojoPayment(req, res) {
 
         const params = new URLSearchParams();
         params.append('amount', parseFloat(amount).toFixed(2));
-        params.append('purpose', `Apex Deposit ${accountId}`);
+        params.append('purpose', toAccount ? `Apex Transfer to ${recipientName}` : `Apex Deposit ${accountId}`);
         params.append('buyer_name', req.user.name || "Banking User");
         params.append('email', req.user.email || "user@divyanshbank.com");
         params.append('phone', req.user.phone || "8894004117");
@@ -403,11 +424,11 @@ async function createInstamojoPayment(req, res) {
 
             await transactionmodel.create({
                 fromaccount: account._id,
-                toaccount: account._id,
+                toaccount: targetAccount ? targetAccount._id : account._id,
                 amount: parseFloat(amount),
                 idempotencyKey: payment_request.id,
-                fromName: "UPI Deposit",
-                toName: req.user.name || "Banking User",
+                fromName: toAccount ? `${req.user.name} (via Instamojo)` : "UPI Deposit",
+                toName: toAccount ? recipientName : (req.user.name || "Banking User"),
                 status: "PENDING"
             });
 
@@ -460,9 +481,9 @@ async function instamojoWebhook(req, res) {
         // Maintain idempotencyKey as the original payment_request_id so frontend polling finds it perfectly!
         await transaction.save();
 
-        await ledgermodel.create([{ account: transaction.fromaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }]);
+        await ledgermodel.create([{ account: transaction.toaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }]);
 
-        const account = await accountmodel.findById(transaction.fromaccount);
+        const account = await accountmodel.findById(transaction.toaccount);
 
         try {
             redisClient.publish('payment_updates', JSON.stringify({
