@@ -340,10 +340,15 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
                 </div>
 
                 <button 
-                  onClick={() => { setStep(1); onClose(); }}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-2xl transition-all border border-slate-700 flex items-center justify-center gap-2"
+                  onClick={handleTransfer}
+                  disabled={loading}
+                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
                 >
-                  <span>Done / Close</span>
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <span>Confirm & Complete Transfer</span>
+                  )}
                 </button>
               </div>
             )}
