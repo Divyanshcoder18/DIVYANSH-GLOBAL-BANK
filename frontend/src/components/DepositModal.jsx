@@ -166,26 +166,9 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                     <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                     <span className="text-xs font-bold uppercase tracking-wider">Listening for Payment...</span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-3">
+                  <p className="text-xs text-slate-400 leading-relaxed">
                     Please do not close this window. Your dashboard will automatically update the moment you complete the payment on your phone.
                   </p>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await API.post('/transaction/webhook/upi', {
-                          client_txn_id: clientTxnId,
-                          amount: parseFloat(amount),
-                          status: 'success'
-                        });
-                        toast.success("Simulation signal sent!");
-                      } catch (err) {
-                        toast.error("Simulation failed");
-                      }
-                    }}
-                    className="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold transition-all"
-                  >
-                    ⚡ [Simulate Webhook Success]
-                  </button>
                 </div>
 
                 <div className="w-full bg-slate-800/50 border border-slate-800 text-slate-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-3">
