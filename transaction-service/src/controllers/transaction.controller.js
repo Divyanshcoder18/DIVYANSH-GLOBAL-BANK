@@ -272,7 +272,7 @@ async function createUpiIntent(req, res) {
             customer_name: req.user.name || "Banking User",
             customer_email: req.user.email || "user@divyanshbank.com",
             customer_mobile: "9999999999",
-            redirect_url: "http://localhost:5173/dashboard",
+            redirect_url: "https://divyansh-global-bank.vercel.app/dashboard",
             udf1: accountId
         });
         
