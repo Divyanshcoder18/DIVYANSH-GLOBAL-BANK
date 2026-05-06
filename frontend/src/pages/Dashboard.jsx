@@ -5,7 +5,7 @@ import API from '../api/axios';
 import { motion } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import { Wallet, ArrowUpRight, ArrowDownLeft, History, LogOut, Plus, RefreshCw, ChevronRight, Search, Filter, Download } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, History, LogOut, Plus, RefreshCw, ChevronRight, Search, Filter, Download, Eye, EyeOff } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import TransferModal from '../components/TransferModal';
 import DepositModal from '../components/DepositModal';
@@ -29,6 +29,7 @@ function Dashboard() {
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showBalance, setShowBalance] = useState(false);
 
   // SEARCH & FILTER STATE
   const [searchTerm, setSearchTerm] = useState('');
@@ -290,7 +291,7 @@ function Dashboard() {
                   <p className="text-xs font-bold tracking-widest text-white/60 uppercase">
                     {selectedAccount?.nickname || selectedAccount?.accountType || 'Apex Demo Card'}
                   </p>
-                  <p className="text-xs text-white/40 tracking-tighter">Simulation ID •• {selectedAccount?._id?.slice(-4)}</p>
+                  <p className="text-xs text-white/40 tracking-tighter">Account Number •• {selectedAccount?._id?.slice(-4)}</p>
                   <div className="flex items-center gap-2 mt-1 justify-end">
                     <p className="text-[10px] text-white/30 font-mono tracking-tighter">
                       ID: {selectedAccount?._id}
@@ -310,19 +311,31 @@ function Dashboard() {
               </div>
 
               <div className="mt-12">
-                <p className="text-white/70 text-sm font-medium uppercase tracking-widest">Simulator Credits</p>
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-white/70 text-sm font-medium uppercase tracking-widest">Total Account Balance</p>
+                  <button 
+                    onClick={() => setShowBalance(!showBalance)} 
+                    className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-md transition-all border border-white/5"
+                  >
+                    {showBalance ? <EyeOff size={12} /> : <Eye size={12} />}
+                    <span>{showBalance ? "Hide" : "Check"} Balance</span>
+                  </button>
+                </div>
+                <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-2xl font-light text-white/50">₹</span>
                   <h2 className="text-5xl md:text-6xl font-bold tracking-tight">
-                    {selectedAccount?.balance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {showBalance 
+                      ? selectedAccount?.balance?.toLocaleString(undefined, { minimumFractionDigits: 2 }) 
+                      : "••••••"
+                    }
                   </h2>
                 </div>
               </div>
 
               <div className="mt-8 pt-6 border-t border-white/10 flex gap-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-                  <span className="text-xs text-white/80 font-medium tracking-wide uppercase">Simulation Active</span>
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <span className="text-xs text-white/80 font-medium tracking-wide uppercase">Real Account Active</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400"></div>
