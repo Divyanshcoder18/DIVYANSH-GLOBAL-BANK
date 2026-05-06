@@ -157,6 +157,29 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                     <div className="w-5 h-5 border-2 border-slate-500/30 border-t-slate-400 rounded-full animate-spin"></div>
                     <span>Awaiting Bank Confirmation</span>
                 </div>
+
+                {/* DEVELOPER TESTING BUTTON */}
+                <button 
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      await API.post('/transaction/webhook/upi', {
+                        client_txn_id: txRef,
+                        amount: parseFloat(amount),
+                        status: 'success',
+                        customer_vpa: 'test_user@oksbi'
+                      });
+                      toast.success("Webhook Simulated!");
+                    } catch(e) {
+                      toast.error("Webhook failed");
+                    }
+                    setLoading(false);
+                  }}
+                  disabled={loading}
+                  className="w-full mt-4 bg-orange-500/20 hover:bg-orange-500/40 border border-orange-500/50 text-orange-400 text-xs font-bold py-2 rounded-xl transition-all"
+                >
+                  🛠️ Developer Demo: Force Trigger Webhook
+                </button>
               </div>
             )}
           </motion.div>

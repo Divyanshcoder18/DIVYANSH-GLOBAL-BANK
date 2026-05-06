@@ -34,9 +34,20 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('ALL'); // 'ALL', 'INCOME', 'EXPENSE'
 
+  const checkIsIncome = (tx, currentAccountId) => {
+    if (tx.fromaccount !== tx.toaccount) {
+      return tx.toaccount === currentAccountId;
+    }
+    // If fromaccount === toaccount (Deposit, Withdrawal, or External Transfer)
+    if (tx.idempotencyKey?.startsWith('deposit_') || tx.fromName === 'External Gateway' || tx.fromName?.includes('External UPI API')) {
+      return true;
+    }
+    return false;
+  };
+
   const downloadReceipt = (tx) => {
     const doc = new jsPDF();
-    const isIncome = tx.toaccount === selectedAccount?._id;
+    const isIncome = checkIsIncome(tx, selectedAccount?._id);
 
     // Header
     doc.setFillColor(15, 23, 42); // Slate 950
@@ -417,7 +428,7 @@ function Dashboard() {
           <div className="space-y-4">
             {(() => {
               const filtered = transactions.filter(tx => {
-                const isIncome = tx.toaccount === selectedAccount?._id;
+                const isIncome = checkIsIncome(tx, selectedAccount?._id);
                 const matchesFilter = 
                   filterType === 'ALL' || 
                   (filterType === 'INCOME' && isIncome) || 
@@ -433,7 +444,7 @@ function Dashboard() {
 
               return filtered.length > 0 ? (
                 filtered.map((tx, index) => {
-                  const isIncome = tx.toaccount === selectedAccount?._id;
+                  const isIncome = checkIsIncome(tx, selectedAccount?._id);
                   return (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}

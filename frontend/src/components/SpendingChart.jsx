@@ -34,12 +34,19 @@ function SpendingChart({ transactions, currentAccountId }) {
       const monthObj = lastSixMonths.find(m => m.name === monthName);
       
       if (monthObj) {
-        // If money came TO our account, it's Income
-        if (tx.toaccount === currentAccountId) {
+        let isIncome = false;
+        if (tx.fromaccount !== tx.toaccount) {
+            isIncome = tx.toaccount === currentAccountId;
+        } else {
+            // If fromaccount === toaccount (Deposit, Withdrawal, or External Transfer)
+            if (tx.idempotencyKey?.startsWith('deposit_') || tx.fromName === 'External Gateway' || tx.fromName?.includes('External UPI API')) {
+                isIncome = true;
+            }
+        }
+        
+        if (isIncome) {
           monthObj.income += tx.amount;
-        } 
-        // If money went FROM our account, it's Expenses
-        else if (tx.fromaccount === currentAccountId) {
+        } else {
           monthObj.expenses += tx.amount;
         }
       }
