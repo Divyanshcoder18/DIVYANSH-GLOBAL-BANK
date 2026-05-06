@@ -402,7 +402,7 @@ async function instamojoWebhook(req, res) {
         }
 
         transaction.status = 'SUCCESS';
-        transaction.idempotencyKey = payment_id;
+        // Maintain idempotencyKey as the original payment_request_id so frontend polling finds it perfectly!
         await transaction.save();
 
         await ledgermodel.create([{ account: transaction.fromaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }]);
