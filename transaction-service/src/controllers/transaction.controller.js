@@ -330,7 +330,7 @@ async function createInstamojoPayment(req, res) {
         params.append('purpose', `Apex Deposit ${accountId}`);
         params.append('buyer_name', req.user.name || "Banking User");
         params.append('email', req.user.email || "user@divyanshbank.com");
-        params.append('phone', "9999999999");
+        params.append('phone', req.user.phone || "8894004117");
         params.append('redirect_url', "https://divyansh-global-bank.vercel.app/dashboard");
         params.append('webhook', `https://banking-transaction-service.onrender.com/api/transaction/webhook/instamojo`);
         params.append('allow_repeated_payments', 'false');
