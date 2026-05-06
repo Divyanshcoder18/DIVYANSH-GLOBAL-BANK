@@ -70,7 +70,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
     
     setLoading(true);
     try {
-      const res = await API.post('/transaction/instamojo/payment', {
+      const res = await API.post('/transaction/deposit/instamojo', {
         amount: parseFloat(amount),
         accountId: fromAccountId,
         toAccount: toAccount
