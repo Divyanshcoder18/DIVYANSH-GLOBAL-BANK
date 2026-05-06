@@ -20,14 +20,16 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
     
     setLoading(true);
     try {
-      const res = await API.post('/transaction/deposit/upi-intent', {
+      const res = await API.post('/transaction/deposit/instamojo', {
         accountId: accountId,
         amount: parseFloat(amount)
       });
 
       if (res.data.success) {
-        setUpiIntentUrl(res.data.upi_intent);
-        setClientTxnId(res.data.client_txn_id);
+        setUpiIntentUrl(res.data.payment_url);
+        setClientTxnId(res.data.payment_request_id);
+        // Open the secure Instamojo payment link in a new tab
+        window.open(res.data.payment_url, '_blank', 'noopener,noreferrer');
         setStep(2);
       }
     } catch (err) {
@@ -90,9 +92,9 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                 {step === 1 ? <Plus size={24} /> : <QrCode size={24} />}
               </div>
               <div>
-                <h2 className="text-xl font-bold">{step === 1 ? "Add Simulator Credits" : "Scan to Pay (Real Money)"}</h2>
+                <h2 className="text-xl font-bold">{step === 1 ? "Deposit Real Money" : "Pay via Instamojo Gateway"}</h2>
                 <p className="text-slate-500 text-sm">
-                  {step === 1 ? "Enter deposit amount" : "Use GPay, PhonePe, or Paytm"}
+                  {step === 1 ? "Enter deposit amount" : "Secure UPI, Cards, and Netbanking"}
                 </p>
               </div>
             </div>
@@ -124,40 +126,34 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   ) : (
                     <>
-                      <span>Generate Payment Link</span>
-                      <QrCode size={18} />
+                      <span>Proceed to Payment</span>
+                      <Plus size={18} />
                     </>
                   )}
                 </button>
               </form>
             ) : (
-              /* STEP 2: SHOW QR CODE & DIRECT LINK */
+              /* STEP 2: OPEN CHEKOUT LINK */
               <div className="space-y-6 flex flex-col items-center">
 
-                {/* The QR Code Generator */}
-                <div className="bg-white p-4 rounded-2xl shadow-xl">
-                  <QRCodeSVG
-                    value={upiIntentUrl}
-                    size={200}
-                    bgColor={"#ffffff"}
-                    fgColor={"#0f172a"}
-                    level={"H"}
-                  />
+                <div className="text-center my-4">
+                  <p className="text-4xl font-bold text-emerald-400 mb-2">₹{parseFloat(amount).toLocaleString()}</p>
+                  <p className="text-xs text-slate-400">Secure transaction handled by Instamojo</p>
                 </div>
 
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-emerald-400 mb-1">₹{parseFloat(amount).toLocaleString()}</p>
-                  <p className="text-xs text-slate-400">Scan via GPay, PhonePe, or Paytm</p>
-                </div>
-
-                {/* Mobile Deep Link Button */}
                 <a
                   href={upiIntentUrl}
-                  className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 md:hidden"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all text-center flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
                 >
-                  <Plus size={16} />
-                  <span>Open in UPI App (Mobile Only)</span>
+                  <QrCode size={18} />
+                  <span>Click to Pay (Real Money)</span>
                 </a>
+
+                <p className="text-[10px] text-slate-500 text-center">
+                  *If the checkout page did not open automatically, click the button above to pay.
+                </p>
 
                 <div className="w-full border-t border-slate-800 my-2"></div>
 
@@ -167,7 +163,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                     <span className="text-xs font-bold uppercase tracking-wider">Listening for Payment...</span>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Please do not close this window. Your dashboard will automatically update the moment you complete the payment on your phone.
+                    Once you complete the payment on the Instamojo page, this modal will automatically close and credit your wallet instantly.
                   </p>
                 </div>
 
