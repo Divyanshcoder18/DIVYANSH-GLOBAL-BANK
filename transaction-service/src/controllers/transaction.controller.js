@@ -300,12 +300,67 @@ async function checkDepositStatus(req, res) {
     try {
         const { client_txn_id } = req.params;
         const txn = await transactionmodel.findOne({ idempotencyKey: client_txn_id });
-        if (txn && txn.status === 'SUCCESS') {
+        
+        if (!txn) {
+            return res.status(404).json({ success: false, message: "Transaction not found" });
+        }
+
+        if (txn.status === 'SUCCESS') {
             return res.status(200).json({ success: true, status: 'SUCCESS' });
         }
-        return res.status(200).json({ success: true, status: 'PENDING' });
+
+        // Supercharged Fallback: Directly query Instamojo to verify if paid!
+        const endpoint = process.env.INSTAMOJO_ENV === 'sandbox'
+            ? `https://test.instamojo.com/api/1.1/payment-requests/${client_txn_id}/`
+            : `https://www.instamojo.com/api/1.1/payment-requests/${client_txn_id}/`;
+
+        const response = await axios.get(endpoint, {
+            headers: {
+                'X-Api-Key': process.env.INSTAMOJO_API_KEY,
+                'X-Auth-Token': process.env.INSTAMOJO_AUTH_TOKEN
+            }
+        });
+
+        if (response.data && response.data.success) {
+            const pm_status = response.data.payment_request.status;
+            // Instamojo status is 'Completed' or 'Paid' or 'Credit' when paid
+            if (pm_status === 'Completed' || pm_status === 'Paid' || pm_status === 'Credit') {
+                txn.status = 'SUCCESS';
+                await txn.save();
+
+                // Credit the ledger if not already credited
+                const ledgerExists = await ledgermodel.findOne({ transaction: txn._id });
+                if (!ledgerExists) {
+                    await ledgermodel.create([{ 
+                        account: txn.fromaccount, 
+                        amount: txn.amount, 
+                        transaction: txn._id, 
+                        type: "CREDIT" 
+                    }]);
+
+                    // Publish redis notification so frontend gets credited live
+                    try {
+                        const account = await accountmodel.findById(txn.fromaccount);
+                        redisClient.publish('payment_updates', JSON.stringify({
+                            userId: account.user,
+                            amount: txn.amount,
+                            status: 'SUCCESS',
+                            from: account._id,
+                            type: 'DEPOSIT'
+                        }));
+                    } catch (rErr) {
+                        console.error("Redis status publish error:", rErr.message);
+                    }
+                }
+
+                return res.status(200).json({ success: true, status: 'SUCCESS' });
+            }
+        }
+
+        return res.status(200).json({ success: true, status: txn.status });
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        console.error("Check status error:", error.message);
+        return res.status(200).json({ success: true, status: 'PENDING' }); // Fall back safely
     }
 }
 
