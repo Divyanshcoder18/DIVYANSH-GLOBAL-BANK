@@ -403,7 +403,7 @@ async function createInstamojoPayment(req, res) {
 
         const params = new URLSearchParams();
         params.append('amount', parseFloat(amount).toFixed(2));
-        params.append('purpose', toAccount ? `Apex Transfer to ${recipientName}` : `Apex Deposit ${accountId}`);
+        params.append('purpose', toAccount ? 'Apex UPI Transfer' : 'Apex Deposit');
         params.append('buyer_name', req.user.name || "Banking User");
         params.append('email', req.user.email || "user@divyanshbank.com");
         params.append('phone', req.user.phone || "8894004117");
