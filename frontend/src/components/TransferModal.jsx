@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, AlertCircle, CheckCircle2, QrCode, Plus } from 'lucide-react';
+import { X, Send, AlertCircle, CheckCircle2, QrCode, Plus, Landmark } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import API from '../api/axios';
 import { toast } from 'react-hot-toast';
 
 function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, initialRecipient }) {
   const [step, setStep] = useState(1);
+  const [transferType, setTransferType] = useState('UPI'); // 'UPI' or 'BANK'
+  
+  // Form State
   const [toAccount, setToAccount] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [ifscCode, setIfscCode] = useState('');
   const [amount, setAmount] = useState('');
+  
   const [loading, setLoading] = useState(false);
   
   // VALIDATION STATE
@@ -19,13 +25,14 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
   // Auto-fill when scanned
   React.useEffect(() => {
     if (initialRecipient) {
+      setTransferType('UPI');
       setToAccount(initialRecipient);
     }
   }, [initialRecipient]);
 
   // VPA LOOKUP LOGIC (Debounced)
   React.useEffect(() => {
-    if (toAccount.includes('@')) {
+    if (transferType === 'UPI' && toAccount.includes('@')) {
       setIsValidating(true);
       setRecipientName('');
       setValidationError('');
@@ -37,7 +44,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
           setValidationError('');
         } catch (err) {
           setRecipientName('');
-          setValidationError('Recipient not found on local network, but external UPI is supported!');
+          setValidationError('Recipient not found on local network. Will be processed as External UPI.');
         } finally {
           setIsValidating(false);
         }
@@ -49,9 +56,9 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
       setValidationError('');
       setIsValidating(false);
     }
-  }, [toAccount]);
+  }, [toAccount, transferType]);
 
-  // Magic UPI Link Generation
+  // Magic UPI Link Generation (Only for UPI transfers)
   const upiLink = step === 2 
     ? `upi://pay?pa=${toAccount}&pn=${encodeURIComponent(recipientName || 'External User')}&am=${amount}&cu=INR` 
     : '';
@@ -65,43 +72,47 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
 
   const handleTransfer = async (e) => {
     if (e) e.preventDefault();
-    if (!toAccount || !amount) return toast.error("Please fill all fields");
+    
+    // Validate based on type
+    if (transferType === 'UPI') {
+      if (!toAccount || !amount) return toast.error("Please fill all fields");
+    } else {
+      if (!accountNumber || !ifscCode || !amount) return toast.error("Please fill all Bank details");
+    }
 
     setLoading(true);
     try {
-      // Execute the transfer on the backend (deducts simulator credits, adds to recipient)
-      await API.post('/transaction/transfer', {
+      // If it's a Bank Transfer, we construct a fake VPA to trick our robust backend into logging it!
+      const finalToAccount = transferType === 'BANK' ? `${accountNumber}@${ifscCode}.ifsc` : toAccount;
+
+      const res = await API.post('/transaction/transfer', {
         fromaccount: fromAccountId,
-        toaccount: toAccount,
+        toaccount: finalToAccount,
         amount: parseFloat(amount),
         idempotencyKey: `tx-${Date.now()}-${Math.random()}`,
         email: userEmail
       });
       
-      toast.custom((t) => (
-        <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-slate-900 shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border border-emerald-500/50`}>
-          <div className="flex-1 w-0 p-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 pt-0.5">
-                <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-              </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-bold text-white">Transfer Logged!</p>
-                <p className="mt-1 text-sm text-slate-400">Transaction recorded in your simulation history.</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex border-l border-slate-800">
-            <button onClick={() => toast.dismiss(t.id)} className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-blue-500 hover:text-blue-400">Close</button>
-          </div>
-        </div>
-      ));
+      // PASS TRANSACTION DATA BACK FOR THE FULL-SCREEN OVERLAY
+      if (res.data.transaction) {
+         onSuccess(res.data.transaction);
+      } else {
+         // Fallback if transaction object isn't returned
+         onSuccess({
+            amount: parseFloat(amount),
+            from: fromAccountId,
+            type: 'TRANSFER_SENT'
+         });
+      }
       
-      onSuccess();
+      // Reset Modal State
       setStep(1);
       setToAccount('');
+      setAccountNumber('');
+      setIfscCode('');
       setAmount('');
       onClose();
+
     } catch (err) {
       toast.error(err.response?.data?.message || "Transfer failed");
     } finally {
@@ -138,58 +149,120 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
               <div>
                 <h2 className="text-xl font-bold">{step === 1 ? "Transfer Money" : "Pay via Real UPI"}</h2>
                 <p className="text-slate-500 text-sm">
-                  {step === 1 ? "Send funds to another account" : "Scan to complete transfer"}
+                  {step === 1 ? "Send funds securely" : "Scan to complete transfer"}
                 </p>
               </div>
             </div>
 
             {step === 1 ? (
               <form className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">Recipient (Account ID or UPI ID)</label>
-                  <input 
-                    type="text" 
-                    value={toAccount}
-                    onChange={(e) => setToAccount(e.target.value)}
-                    placeholder="e.g. friend@oksbi"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                  />
-                  
-                  {/* VALIDATION FEEDBACK UI */}
-                  <AnimatePresence>
-                    {isValidating && (
-                      <motion.p 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }} 
-                        exit={{ opacity: 0 }}
-                        className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1 animate-pulse"
-                      >
-                        Checking VPA...
-                      </motion.p>
-                    )}
-
-                    {recipientName && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }} 
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-2 shadow-lg shadow-emerald-500/5"
-                      >
-                        <CheckCircle2 size={16} className="text-emerald-400" />
-                        <span className="text-xs font-bold text-emerald-400">Paying: {recipientName}</span>
-                      </motion.div>
-                    )}
-
-                    {validationError && !isValidating && (
-                      <motion.p 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }}
-                        className="text-orange-400 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1"
-                      >
-                        {validationError}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
+                
+                {/* TRANSFER TYPE TOGGLE */}
+                <div className="flex bg-slate-950 border border-slate-800 p-1 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setTransferType('UPI')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                      transferType === 'UPI' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    <QrCode size={14} /> UPI ID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTransferType('BANK')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                      transferType === 'BANK' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    <Landmark size={14} /> Bank / IMPS
+                  </button>
                 </div>
+
+                {/* CONDITIONAL INPUT FIELDS */}
+                <AnimatePresence mode="wait">
+                  {transferType === 'UPI' ? (
+                    <motion.div 
+                      key="upi"
+                      initial={{ opacity: 0, x: -10 }} 
+                      animate={{ opacity: 1, x: 0 }} 
+                      exit={{ opacity: 0, x: 10 }}
+                    >
+                      <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">Recipient UPI ID</label>
+                      <input 
+                        type="text" 
+                        value={toAccount}
+                        onChange={(e) => setToAccount(e.target.value)}
+                        placeholder="e.g. friend@oksbi"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                      />
+                      
+                      {/* VALIDATION FEEDBACK UI */}
+                      <AnimatePresence>
+                        {isValidating && (
+                          <motion.p 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }}
+                            className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1 animate-pulse"
+                          >
+                            Checking VPA...
+                          </motion.p>
+                        )}
+
+                        {recipientName && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }} 
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-2 shadow-lg shadow-emerald-500/5"
+                          >
+                            <CheckCircle2 size={16} className="text-emerald-400" />
+                            <span className="text-xs font-bold text-emerald-400">Paying: {recipientName}</span>
+                          </motion.div>
+                        )}
+
+                        {validationError && !isValidating && (
+                          <motion.p 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }}
+                            className="text-orange-400 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1"
+                          >
+                            {validationError}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="bank"
+                      initial={{ opacity: 0, x: 10 }} 
+                      animate={{ opacity: 1, x: 0 }} 
+                      exit={{ opacity: 0, x: -10 }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">Account Number</label>
+                        <input 
+                          type="text" 
+                          value={accountNumber}
+                          onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                          placeholder="0000 0000 0000"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">IFSC Code</label>
+                        <input 
+                          type="text" 
+                          value={ifscCode}
+                          onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                          placeholder="e.g. SBIN0001234"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div>
                   <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">Amount (₹)</label>
@@ -207,23 +280,26 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
                     type="button"
                     onClick={handleTransfer}
                     disabled={loading}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-white font-bold py-4 rounded-2xl transition-all border border-slate-700 flex items-center justify-center gap-2 text-sm"
+                    className={`${transferType === 'BANK' ? 'w-full' : 'flex-1'} bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-white font-bold py-4 rounded-2xl transition-all border border-slate-700 flex items-center justify-center gap-2 text-sm`}
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                     ) : (
-                      <span>Simulated Transfer</span>
+                      <span>{transferType === 'BANK' ? 'Simulate IMPS Transfer' : 'Simulated Transfer'}</span>
                     )}
                   </button>
-                  <button 
-                    type="button"
-                    onClick={handleGenerateQR}
-                    disabled={loading}
-                    className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 text-sm"
-                  >
-                    <span>Real UPI Transfer</span>
-                    <QrCode size={16} />
-                  </button>
+                  
+                  {transferType === 'UPI' && (
+                    <button 
+                      type="button"
+                      onClick={handleGenerateQR}
+                      disabled={loading}
+                      className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 text-sm"
+                    >
+                      <span>Real UPI Transfer</span>
+                      <QrCode size={16} />
+                    </button>
+                  )}
                 </div>
               </form>
             ) : (
@@ -262,7 +338,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
                     <span className="text-xs font-bold uppercase tracking-wider">Manual Verification</span>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    After you successfully pay via your UPI app, click below to log the transfer in your dashboard.
+                    After you successfully pay via your UPI app, click below to log the transfer and view your receipt.
                   </p>
                 </div>
 

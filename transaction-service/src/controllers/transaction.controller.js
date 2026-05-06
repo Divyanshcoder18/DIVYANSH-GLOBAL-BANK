@@ -19,24 +19,27 @@ async function createtransfer(req, res) {
     try {
         const fromAccount = await accountmodel.findOne({ _id: fromaccount, user: req.user.id || req.user._id });
         let targetAccount;
+        let isExternal = false;
 
         // If toaccount looks like a VPA (contains @)
         if (toaccount.includes('@')) {
             const recipientUser = await usermodel.findOne({ vpa: toaccount.toLowerCase() });
             if (!recipientUser) {
-                return res.status(404).json({ success: false, message: "UPI ID not found" });
-            }
-            // Find the first account for this user
-            targetAccount = await accountmodel.findOne({ user: recipientUser._id });
-            if (!targetAccount) {
-                return res.status(404).json({ success: false, message: "Recipient has no active bank account" });
+                // IT'S AN EXTERNAL REAL UPI TRANSFER!
+                isExternal = true;
+            } else {
+                // Find the first account for this user
+                targetAccount = await accountmodel.findOne({ user: recipientUser._id });
+                if (!targetAccount) {
+                    return res.status(404).json({ success: false, message: "Recipient has no active bank account" });
+                }
             }
         } else {
             // Standard Account ID
             targetAccount = await accountmodel.findById(toaccount);
         }
 
-        if (!fromAccount || !targetAccount) {
+        if (!fromAccount || (!targetAccount && !isExternal)) {
             return res.status(404).json({ success: false, message: "Invalid account(s) provided" });
         }
 
@@ -46,17 +49,19 @@ async function createtransfer(req, res) {
         }
 
         let recipientName = "Account holder";
-        if (toaccount.includes('@')) {
-            recipientName = toaccount; // Or we can use recipientUser.name for even better detail
+        if (isExternal) {
+            recipientName = `Real UPI: ${toaccount}`;
+        } else if (toaccount.includes('@')) {
+            const targetUser = await usermodel.findById(targetAccount.user);
+            recipientName = targetUser ? targetUser.name : toaccount;
         } else {
-            // If it was an ID, we find the user name for that account
             const targetUser = await usermodel.findById(targetAccount.user);
             recipientName = targetUser ? targetUser.name : "Unknown";
         }
 
         const transaction = await transactionmodel.create({
             fromaccount: fromAccount._id,
-            toaccount: targetAccount._id,
+            toaccount: isExternal ? fromAccount._id : targetAccount._id,
             amount,
             fromName: req.user.name,
             toName: recipientName,
@@ -64,36 +69,41 @@ async function createtransfer(req, res) {
             status: "SUCCESS"
         });
 
-        await ledgermodel.create([
-            { account: fromAccount._id, amount, transaction: transaction._id, type: "DEBIT" },
-            { account: targetAccount._id, amount, transaction: transaction._id, type: "CREDIT" }
-        ]);
+        const ledgerEntries = [
+            { account: fromAccount._id, amount, transaction: transaction._id, type: "DEBIT" }
+        ];
+
+        if (!isExternal) {
+            ledgerEntries.push({ account: targetAccount._id, amount, transaction: transaction._id, type: "CREDIT" });
+        }
+        await ledgermodel.create(ledgerEntries);
 
         // 🚀 REAL-TIME SIGNAL (via Redis)
-        // Tell the recipient they got money!
-        redisClient.publish('payment_updates', JSON.stringify({
-            userId: targetAccount.user,
-            amount,
-            status: 'SUCCESS',
-            from: fromAccount._id,
-            type: 'TRANSFER_RECEIVED'
-        }));
+        if (!isExternal) {
+            redisClient.publish('payment_updates', JSON.stringify({
+                userId: targetAccount.user,
+                amount,
+                status: 'SUCCESS',
+                from: fromAccount._id,
+                type: 'TRANSFER_RECEIVED'
+            }));
+        }
 
         // RABBITMQ EVENT
         publishTransactionEvent({
-            type: "TRANSFER",
+            type: isExternal ? "EXTERNAL_TRANSFER" : "TRANSFER",
             amount,
             from: fromAccount._id,
-            to: targetAccount._id,
+            to: isExternal ? "EXTERNAL" : targetAccount._id,
             userEmail: req.user.email,
             timestamp: new Date()
         });
 
         res.status(201).json({ 
             success: true, 
-            message: "Transfer successful", 
+            message: isExternal ? "External UPI Transfer logged" : "Transfer successful", 
             transaction: transaction,
-            recipientName: toaccount.includes('@') ? toaccount : 'Account holder'
+            recipientName: recipientName
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

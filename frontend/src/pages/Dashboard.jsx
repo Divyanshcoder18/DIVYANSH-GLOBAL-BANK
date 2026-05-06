@@ -498,7 +498,13 @@ function Dashboard() {
         }}
         fromAccountId={selectedAccount?._id}
         userEmail={user?.email}
-        onSuccess={() => fetchDashboardData(true)}
+        onSuccess={(txData) => {
+          fetchDashboardData(true);
+          if (txData) {
+             setSuccessData(txData);
+             setShowSuccess(true);
+          }
+        }}
         initialRecipient={scannedRecipient}
       />
 
