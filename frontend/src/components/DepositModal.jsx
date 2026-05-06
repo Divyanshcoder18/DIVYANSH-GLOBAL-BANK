@@ -26,7 +26,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
       });
 
       if (res.data.success) {
-        setUpiIntentUrl(res.data.upi_intent);
+        setUpiIntentUrl(res.data.payment_url);
         setClientTxnId(res.data.client_txn_id);
         setStep(2);
       }
