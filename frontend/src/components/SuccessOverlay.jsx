@@ -54,8 +54,14 @@ const SuccessOverlay = ({ isVisible, data, onClose }) => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
                         >
-                            <h2 className="text-2xl font-black text-white mb-2">Payment Received!</h2>
-                            <p className="text-slate-400 text-sm mb-8 font-medium">Your account has been credited</p>
+                            <h2 className="text-2xl font-black text-white mb-2">
+                                {data?.type === 'TRANSFER_SENT' ? 'Payment Sent!' : 
+                                 data?.type === 'DEPOSIT' ? 'Deposit Successful!' : 'Payment Received!'}
+                            </h2>
+                            <p className="text-slate-400 text-sm mb-8 font-medium">
+                                {data?.type === 'TRANSFER_SENT' ? 'Your transfer was successful' : 
+                                 data?.type === 'DEPOSIT' ? 'Real money added to your simulator' : 'Your account has been credited'}
+                            </p>
                         </motion.div>
 
                         {/* Amount Display */}

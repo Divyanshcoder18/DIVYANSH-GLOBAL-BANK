@@ -128,10 +128,11 @@ function Dashboard() {
   useEffect(() => {
     if (socket) {
       socket.on('payment_status', (data) => {
-        console.log("⚡ Real-time update triggered by socket");
-        if (data.type === 'TRANSFER_RECEIVED') {
+        console.log("⚡ Real-time update triggered by socket", data);
+        if (data.type === 'TRANSFER_RECEIVED' || data.type === 'DEPOSIT') {
           setSuccessData(data);
           setShowSuccess(true);
+          setIsDepositOpen(false); // Auto-close deposit modal if it was open!
         }
         fetchDashboardData(true); // Refresh all data instantly!
       });

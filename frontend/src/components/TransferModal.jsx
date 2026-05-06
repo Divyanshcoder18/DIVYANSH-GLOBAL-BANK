@@ -95,7 +95,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
       
       // PASS TRANSACTION DATA BACK FOR THE FULL-SCREEN OVERLAY
       if (res.data.transaction) {
-         onSuccess(res.data.transaction);
+         onSuccess({ ...res.data.transaction, type: 'TRANSFER_SENT' });
       } else {
          // Fallback if transaction object isn't returned
          onSuccess({

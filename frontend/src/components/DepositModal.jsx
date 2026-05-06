@@ -14,8 +14,9 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
   const upiId = "kaliadivyansh77-1@oksbi";
   const payeeName = "Divyansh Kalia";
 
-  // Generate the Magic UPI Intent Link
-  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR`;
+  // Generate the Magic UPI Intent Link (Including the Transaction Reference 'tr' for Webhooks)
+  const txRef = `deposit_${accountId}_${Date.now()}`;
+  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tr=${txRef}`;
 
   const handleGenerateQR = (e) => {
     e.preventDefault();
@@ -142,30 +143,20 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
 
                 <div className="w-full border-t border-slate-800 my-2"></div>
 
-                <div className="p-4 bg-orange-500/5 border border-orange-500/10 rounded-2xl w-full">
-                  <div className="flex items-center gap-2 text-orange-400 mb-1">
-                    <AlertCircle size={16} />
-                    <span className="text-xs font-bold uppercase tracking-wider">Manual Verification</span>
+                <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl w-full">
+                  <div className="flex items-center gap-2 text-blue-400 mb-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs font-bold uppercase tracking-wider">Listening for Payment...</span>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    After you successfully pay via your UPI app, click the button below to credit your account.
+                    Please do not close this window. Your dashboard will automatically update the moment you complete the payment on your phone.
                   </p>
                 </div>
 
-                <button 
-                  onClick={handleConfirmPayment}
-                  disabled={loading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                     <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      <span>I Have Completed Payment</span>
-                      <CheckCircle2 size={18} />
-                    </>
-                  )}
-                </button>
+                <div className="w-full bg-slate-800/50 border border-slate-800 text-slate-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-3">
+                    <div className="w-5 h-5 border-2 border-slate-500/30 border-t-slate-400 rounded-full animate-spin"></div>
+                    <span>Awaiting Bank Confirmation</span>
+                </div>
               </div>
             )}
           </motion.div>

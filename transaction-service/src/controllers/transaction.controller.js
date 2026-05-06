@@ -192,4 +192,62 @@ async function gethistory(req, res) {
     }
 }
 
-module.exports = { createdeposit, createtransfer, gethistory, createwithdraw };
+async function upiWebhook(req, res) {
+    console.log("🔔 Incoming UPI Webhook Received:", req.body);
+    try {
+        // Most generic UPI APIs send: client_txn_id (our idempotencyKey), amount, status (success/failure)
+        const { client_txn_id, amount, status, upi_txn_id, customer_vpa } = req.body;
+
+        if (!client_txn_id || status !== 'success') {
+            return res.status(200).send("Ignored or failed transaction");
+        }
+
+        // The client_txn_id should contain the accountId we passed when generating the QR
+        // e.g., "deposit_66a123_1700000"
+        const parts = client_txn_id.split('_');
+        const accountId = parts[1];
+
+        if (!accountId) return res.status(400).send("Invalid client_txn_id format");
+
+        const account = await accountmodel.findById(accountId);
+        if (!account) return res.status(404).send("Account not found");
+
+        // Check if transaction already processed to prevent double crediting
+        const existingTxn = await transactionmodel.findOne({ idempotencyKey: client_txn_id });
+        if (existingTxn) {
+            return res.status(200).send("Already processed");
+        }
+
+        // Credit the account
+        const transaction = await transactionmodel.create({
+            fromaccount: account._id,
+            toaccount: account._id,
+            amount: parseFloat(amount),
+            idempotencyKey: client_txn_id,
+            fromName: customer_vpa || "External UPI API",
+            toName: "Simulated Wallet",
+            status: "SUCCESS"
+        });
+
+        await ledgermodel.create([{ account: account._id, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }]);
+
+        const user = await usermodel.findById(account.user);
+
+        // 🚀 FIRE REAL-TIME NOTIFICATION TO FRONTEND
+        redisClient.publish('payment_updates', JSON.stringify({
+            userId: account.user,
+            amount: parseFloat(amount),
+            status: 'SUCCESS',
+            from: account._id,
+            type: 'DEPOSIT' // So the frontend knows it was a deposit
+        }));
+
+        res.status(200).send("Webhook Processed Successfully");
+
+    } catch (error) {
+        console.error("Webhook Error:", error);
+        res.status(500).send("Internal Server Error");
+    }
+}
+
+module.exports = { createdeposit, createtransfer, gethistory, createwithdraw, upiWebhook };
