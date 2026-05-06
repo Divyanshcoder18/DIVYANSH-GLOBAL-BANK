@@ -261,6 +261,7 @@ async function createUpiIntent(req, res) {
     
     if (!amount || !accountId) return res.status(400).json({ success: false, message: "Missing required fields" });
     
+    console.log("🔑 UPIGATEWAY_API_KEY is present:", !!process.env.UPIGATEWAY_API_KEY, "Length:", process.env.UPIGATEWAY_API_KEY ? process.env.UPIGATEWAY_API_KEY.length : 0);
     const client_txn_id = `deposit_${accountId}_${Date.now()}`;
     
     try {
