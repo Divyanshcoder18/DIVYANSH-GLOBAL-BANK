@@ -10,43 +10,27 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
   const [step, setStep] = useState(1); // Step 1: Amount, Step 2: QR Code
   const [loading, setLoading] = useState(false);
 
-  // Your real UPI Details
-  const upiId = "kaliadivyansh77-1@oksbi";
-  const payeeName = "Divyansh Kalia";
+  const [upiIntentUrl, setUpiIntentUrl] = useState('');
 
-  // Generate the Magic UPI Intent Link (Including the Transaction Reference 'tr' for Webhooks)
-  const txRef = `deposit_${accountId}_${Date.now()}`;
-  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tr=${txRef}`;
-
-  const handleGenerateQR = (e) => {
+  const handleGenerateQR = async (e) => {
     e.preventDefault();
     if (!amount || isNaN(amount) || amount <= 0) {
       return toast.error("Please enter a valid amount");
     }
-    setStep(2);
-  };
-
-  const handleConfirmPayment = async () => {
+    
     setLoading(true);
     try {
-      // We bypass Razorpay and directly credit the account for the portfolio demo
-      const res = await API.post('/transaction/deposit', {
+      const res = await API.post('/transaction/deposit/upi-intent', {
         accountId: accountId,
-        amount: parseFloat(amount),
-        idempotencyKey: `deposit_${Date.now()}`
+        amount: parseFloat(amount)
       });
 
       if (res.data.success) {
-        toast.success("Payment Verified! Simulator Credits Added.");
-        onSuccess();
-        setTimeout(() => {
-          setStep(1);
-          setAmount('');
-          onClose();
-        }, 1500);
+        setUpiIntentUrl(res.data.upi_intent);
+        setStep(2);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to process deposit");
+      toast.error(err.response?.data?.message || "Failed to contact payment gateway");
     } finally {
       setLoading(false);
     }
@@ -56,14 +40,14 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
           />
-          
+
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -93,8 +77,8 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                   <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">Amount to Add</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-light text-slate-600">₹</span>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
@@ -104,22 +88,29 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="submit"
+                  disabled={loading}
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
                 >
-                  <span>Generate Payment Link</span>
-                  <QrCode size={18} />
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span>Generate Payment Link</span>
+                      <QrCode size={18} />
+                    </>
+                  )}
                 </button>
               </form>
             ) : (
               /* STEP 2: SHOW QR CODE & DIRECT LINK */
               <div className="space-y-6 flex flex-col items-center">
-                
+
                 {/* The QR Code Generator */}
                 <div className="bg-white p-4 rounded-2xl shadow-xl">
-                  <QRCodeSVG 
-                    value={upiLink} 
+                  <QRCodeSVG
+                    value={upiIntentUrl}
                     size={200}
                     bgColor={"#ffffff"}
                     fgColor={"#0f172a"}
@@ -129,12 +120,12 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
 
                 <div className="text-center">
                   <p className="text-2xl font-bold text-emerald-400 mb-1">₹{parseFloat(amount).toLocaleString()}</p>
-                  <p className="text-xs text-slate-400">Paying to: <strong className="text-white">{payeeName}</strong></p>
+                  <p className="text-xs text-slate-400">Scan via GPay, PhonePe, or Paytm</p>
                 </div>
 
                 {/* Mobile Deep Link Button */}
-                <a 
-                  href={upiLink}
+                <a
+                  href={upiIntentUrl}
                   className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 md:hidden"
                 >
                   <Plus size={16} />
@@ -154,32 +145,9 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                 </div>
 
                 <div className="w-full bg-slate-800/50 border border-slate-800 text-slate-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-3">
-                    <div className="w-5 h-5 border-2 border-slate-500/30 border-t-slate-400 rounded-full animate-spin"></div>
-                    <span>Awaiting Bank Confirmation</span>
+                  <div className="w-5 h-5 border-2 border-slate-500/30 border-t-slate-400 rounded-full animate-spin"></div>
+                  <span>Awaiting Bank Confirmation</span>
                 </div>
-
-                {/* DEVELOPER TESTING BUTTON */}
-                <button 
-                  onClick={async () => {
-                    setLoading(true);
-                    try {
-                      await API.post('/transaction/webhook/upi', {
-                        client_txn_id: txRef,
-                        amount: parseFloat(amount),
-                        status: 'success',
-                        customer_vpa: 'test_user@oksbi'
-                      });
-                      toast.success("Webhook Simulated!");
-                    } catch(e) {
-                      toast.error("Webhook failed");
-                    }
-                    setLoading(false);
-                  }}
-                  disabled={loading}
-                  className="w-full mt-4 bg-orange-500/20 hover:bg-orange-500/40 border border-orange-500/50 text-orange-400 text-xs font-bold py-2 rounded-xl transition-all"
-                >
-                  🛠️ Developer Demo: Force Trigger Webhook
-                </button>
               </div>
             )}
           </motion.div>

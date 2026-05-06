@@ -10,6 +10,5 @@ const tokenblacklistschema = new mongoose.Schema({
 
 tokenblacklistschema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 20 });
 
-// Safe model registration for microservices
 const tokenblacklistmodel = mongoose.models.tokenblacklist || mongoose.model("tokenblacklist", tokenblacklistschema);
 module.exports = tokenblacklistmodel;

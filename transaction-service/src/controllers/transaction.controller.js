@@ -6,6 +6,7 @@ const { publishTransactionEvent } = require('../utils/producer.js');
 
 const usermodel = require('../models/user.model.js');
 const Redis = require('ioredis');
+const axios = require('axios');
 
 const redisClient = new Redis(process.env.REDIS_URL);
 
@@ -234,13 +235,18 @@ async function upiWebhook(req, res) {
         const user = await usermodel.findById(account.user);
 
         // 🚀 FIRE REAL-TIME NOTIFICATION TO FRONTEND
-        redisClient.publish('payment_updates', JSON.stringify({
-            userId: account.user,
-            amount: parseFloat(amount),
-            status: 'SUCCESS',
-            from: account._id,
-            type: 'DEPOSIT' // So the frontend knows it was a deposit
-        }));
+        try {
+            redisClient.publish('payment_updates', JSON.stringify({
+                userId: account.user,
+                amount: parseFloat(amount),
+                status: 'SUCCESS',
+                from: account._id,
+                type: 'DEPOSIT' // So the frontend knows it was a deposit
+            }));
+            console.log("Redis publish successful for webhook");
+        } catch (redisErr) {
+            console.error("Redis publish failed, but proceeding:", redisErr.message);
+        }
 
         res.status(200).send("Webhook Processed Successfully");
 
@@ -250,4 +256,40 @@ async function upiWebhook(req, res) {
     }
 }
 
-module.exports = { createdeposit, createtransfer, gethistory, createwithdraw, upiWebhook };
+async function createUpiIntent(req, res) {
+    const { amount, accountId } = req.body;
+    
+    if (!amount || !accountId) return res.status(400).json({ success: false, message: "Missing required fields" });
+    
+    const client_txn_id = `deposit_${accountId}_${Date.now()}`;
+    
+    try {
+        const response = await axios.post('https://api.upigateway.com/api/create_order', {
+            key: process.env.UPIGATEWAY_API_KEY,
+            client_txn_id: client_txn_id,
+            amount: parseFloat(amount).toFixed(2).toString(),
+            p_info: "Wallet Deposit",
+            customer_name: req.user.name || "Banking User",
+            customer_email: req.user.email || "user@divyanshbank.com",
+            customer_mobile: "9999999999",
+            redirect_url: "http://localhost:5173/dashboard",
+            udf1: accountId
+        });
+        
+        if (response.data && response.data.status) {
+            return res.status(200).json({
+                success: true,
+                payment_url: response.data.data.payment_url,
+                upi_intent: response.data.data.upi_intent,
+                client_txn_id: client_txn_id
+            });
+        } else {
+            return res.status(400).json({ success: false, message: response.data.msg || "Gateway Error" });
+        }
+    } catch (error) {
+        console.error("API Gateway error:", error.message);
+        return res.status(500).json({ success: false, message: "Server error calling gateway" });
+    }
+}
+
+module.exports = { createdeposit, createtransfer, gethistory, createwithdraw, upiWebhook, createUpiIntent };
