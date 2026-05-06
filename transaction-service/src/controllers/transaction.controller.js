@@ -278,10 +278,11 @@ async function createUpiIntent(req, res) {
         });
         
         if (response.data && response.data.status) {
+            const bhimLink = response.data.data.upi_intent?.bhim_link || response.data.data.payment_url;
             return res.status(200).json({
                 success: true,
                 payment_url: response.data.data.payment_url,
-                upi_intent: response.data.data.upi_intent,
+                upi_intent: bhimLink,
                 client_txn_id: client_txn_id
             });
         } else {
