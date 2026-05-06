@@ -294,4 +294,25 @@ async function createUpiIntent(req, res) {
     }
 }
 
-module.exports = { createdeposit, createtransfer, gethistory, createwithdraw, upiWebhook, createUpiIntent };
+async function checkDepositStatus(req, res) {
+    try {
+        const { client_txn_id } = req.params;
+        const txn = await transactionmodel.findOne({ idempotencyKey: client_txn_id });
+        if (txn && txn.status === 'SUCCESS') {
+            return res.status(200).json({ success: true, status: 'SUCCESS' });
+        }
+        return res.status(200).json({ success: true, status: 'PENDING' });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+module.exports = {
+    createtransfer,
+    gethistory,
+    createdeposit,
+    createwithdraw,
+    upiWebhook,
+    createUpiIntent,
+    checkDepositStatus
+};

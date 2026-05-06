@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createtransfer, gethistory, createdeposit, createwithdraw, upiWebhook, createUpiIntent } = require('../controllers/transaction.controller.js');
+const { createtransfer, gethistory, createdeposit, createwithdraw, upiWebhook, createUpiIntent, checkDepositStatus } = require('../controllers/transaction.controller.js');
 const { createOrder, verifyPayment, verifyPaymentP2P, razorpayWebhook, initiateRealPayout, initiateRealP2PTransfer } = require('../controllers/payment.controller.js');
 const { authmiddleware } = require('../middleware/auth.middleware.js');
 
@@ -9,6 +9,7 @@ router.post('/transfer', authmiddleware, createtransfer);
 router.get('/history/:accountId', authmiddleware, gethistory);
 router.post('/deposit', authmiddleware, createdeposit);
 router.post('/deposit/upi-intent', authmiddleware, createUpiIntent);
+router.get('/deposit/status/:client_txn_id', authmiddleware, checkDepositStatus);
 router.post('/withdraw', authmiddleware, createwithdraw);
 
 // Razorpay Payment & Payout Routes

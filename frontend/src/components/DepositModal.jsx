@@ -9,8 +9,8 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
   const [amount, setAmount] = useState('');
   const [step, setStep] = useState(1); // Step 1: Amount, Step 2: QR Code
   const [loading, setLoading] = useState(false);
-
   const [upiIntentUrl, setUpiIntentUrl] = useState('');
+  const [clientTxnId, setClientTxnId] = useState('');
 
   const handleGenerateQR = async (e) => {
     e.preventDefault();
@@ -27,6 +27,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
 
       if (res.data.success) {
         setUpiIntentUrl(res.data.upi_intent);
+        setClientTxnId(res.data.client_txn_id);
         setStep(2);
       }
     } catch (err) {
@@ -35,6 +36,32 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
       setLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    if (step !== 2 || !clientTxnId) return;
+
+    let isMounted = true;
+    const interval = setInterval(async () => {
+      try {
+        const res = await API.get(`/transaction/deposit/status/${clientTxnId}`);
+        if (res.data.success && res.data.status === 'SUCCESS') {
+          clearInterval(interval);
+          if (isMounted) {
+            toast.success("Deposit Successful!");
+            onSuccess();
+            onClose();
+          }
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [step, clientTxnId, onSuccess, onClose]);
 
   return (
     <AnimatePresence>
