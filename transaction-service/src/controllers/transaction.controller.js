@@ -322,8 +322,8 @@ async function createInstamojoPayment(req, res) {
 
         const isSandbox = process.env.INSTAMOJO_ENV === 'sandbox';
         const endpoint = isSandbox 
-            ? 'https://test.instamojo.com/api/v1.1/payment-requests/' 
-            : 'https://www.instamojo.com/api/v1.1/payment-requests/';
+            ? 'https://test.instamojo.com/api/1.1/payment-requests/' 
+            : 'https://www.instamojo.com/api/1.1/payment-requests/';
 
         const params = new URLSearchParams();
         params.append('amount', parseFloat(amount).toFixed(2));
