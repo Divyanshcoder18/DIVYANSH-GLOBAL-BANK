@@ -264,7 +264,7 @@ async function createUpiIntent(req, res) {
     const client_txn_id = `deposit_${accountId}_${Date.now()}`;
     
     try {
-        const response = await axios.post('https://api.upigateway.com/api/create_order', {
+        const response = await axios.post('https://merchant.upigateway.com/api/create_order', {
             key: process.env.UPIGATEWAY_API_KEY,
             client_txn_id: client_txn_id,
             amount: parseFloat(amount).toFixed(2).toString(),
