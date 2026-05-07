@@ -23,11 +23,23 @@ const PORT = process.env.PORT || 10000;
 app.use(cors());
 
 // Redis Setup
-const redis = new Redis(process.env.REDIS_URL);
-const redisSub = new Redis(process.env.REDIS_URL);
+const redisOptions = {
+    maxRetriesPerRequest: 1,
+    connectTimeout: 2000,
+    retryStrategy(times) {
+        if (times > 3) return null; // Stop reconnecting to prevent log flooding and crashes
+        return Math.min(times * 1000, 5000);
+    }
+};
+
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', redisOptions);
+const redisSub = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', redisOptions);
 
 redis.on('connect', () => console.log('✅ Gateway Protected with Redis'));
 redisSub.on('connect', () => console.log('✅ Real-time Channel Active'));
+
+redis.on('error', (err) => console.warn('⚠️ Redis Connection Alert (Gateway): Running with fallback. Details:', err.message));
+redisSub.on('error', (err) => console.warn('⚠️ Redis Sub Connection Alert (Gateway): Running with fallback. Details:', err.message));
 
 // Socket.io Connection Logic
 io.on('connection', (socket) => {
