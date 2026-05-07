@@ -55,7 +55,7 @@ redisSub.on('message', (channel, message) => {
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 100000, // Safe high limit for sandbox and Render proxy shared IPs
     message: 'Too many requests'
 });
 app.use(limiter);
