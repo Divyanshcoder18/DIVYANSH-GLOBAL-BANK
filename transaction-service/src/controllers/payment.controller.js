@@ -83,7 +83,14 @@ async function verifyPayment(req, res) {
 
 const usermodel = require('../models/user.model.js');
 const Redis = require('ioredis');
-const redisClient = new Redis(process.env.REDIS_URL);
+const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+    maxRetriesPerRequest: 3,
+    connectTimeout: 5000
+});
+
+redisClient.on('error', (err) => {
+    console.warn("⚠️ Redis Connection Alert (Payment Controller): Running with fallback. Details:", err.message);
+});
 
 // 3. Verify P2P Payment (Direct to Recipient)
 async function verifyPaymentP2P(req, res) {
