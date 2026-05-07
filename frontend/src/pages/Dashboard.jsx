@@ -12,7 +12,6 @@ import DepositModal from '../components/DepositModal';
 import WithdrawModal from '../components/WithdrawModal';
 import CreateAccountModal from '../components/CreateAccountModal';
 import SpendingChart from '../components/SpendingChart';
-import MyQRCard from '../components/MyQRCard';
 import ScannerModal from '../components/ScannerModal';
 import { ShieldCheck, Activity, CreditCard, Landmark, PiggyBank, Briefcase, Camera } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
@@ -353,9 +352,6 @@ function Dashboard() {
           </motion.div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <MyQRCard user={user} />
-            </div>
             <button
               onClick={() => setIsScannerOpen(true)}
               className="flex flex-col justify-between p-6 bg-blue-600 border border-blue-400 rounded-[2rem] hover:bg-blue-500 shadow-xl shadow-blue-600/20 transition-all group text-left"
