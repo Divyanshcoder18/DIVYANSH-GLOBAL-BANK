@@ -15,6 +15,6 @@ app.listen(PORT, '0.0.0.0', () => {
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/banking-system')
     .then(() => {
         console.log("✅ Transaction Service Database Connected");
-        connectRabbitMQ();
+        connectRabbitMQ().catch(err => console.error("⚠️ [RABBITMQ] Async Connection Error:", err.message));
     })
     .catch((err) => console.error("❌ Transaction Service DB Error:", err));

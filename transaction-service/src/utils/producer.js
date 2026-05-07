@@ -21,8 +21,8 @@ async function connectRabbitMQ() {
             retries -= 1;
             console.log(`⚠️ [RABBITMQ] Connection failed. Retrying in 5 seconds...`);
             if (retries === 0) {
-                console.error("❌ [RABBITMQ] Critical: Could not connect to RabbitMQ broker.");
-                throw error;
+                console.error("❌ [RABBITMQ] Critical: Could not connect to RabbitMQ broker. Running on HTTP fallback.");
+                return;
             }
             await new Promise(res => setTimeout(res, 5000));
         }
