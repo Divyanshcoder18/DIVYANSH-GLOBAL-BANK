@@ -39,8 +39,13 @@ function Dashboard() {
     if (tx.fromaccount !== tx.toaccount) {
       return tx.toaccount === currentAccountId;
     }
-    // If fromaccount === toaccount (Deposit, Withdrawal, or External Transfer)
-    if (tx.idempotencyKey?.startsWith('deposit_') || tx.fromName === 'External Gateway' || tx.fromName?.includes('External UPI API')) {
+    // If fromaccount === toaccount (Deposit, Withdrawal, Welcome Bonus, or External Transfer)
+    if (
+      tx.idempotencyKey?.startsWith('deposit_') || 
+      tx.idempotencyKey?.startsWith('bonus-') || 
+      tx.fromName === 'External Gateway' || 
+      tx.fromName?.includes('External UPI API')
+    ) {
       return true;
     }
     return false;
@@ -472,7 +477,10 @@ function Dashboard() {
                         </div>
                         <div>
                           <p className="font-bold text-slate-200">
-                            {!isIncome ? `Sent to ${tx.toName || 'Account'}` : `Received from ${tx.fromName || 'Unknown'}`}
+                            {tx.idempotencyKey?.startsWith('bonus-') 
+                              ? "Welcome Bonus Credit" 
+                              : (!isIncome ? `Sent to ${tx.toName || 'Account'}` : `Received from ${tx.fromName || 'Unknown'}`)
+                            }
                           </p>
                           <p className="text-xs text-slate-500 font-medium">
                             {new Date(tx.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
