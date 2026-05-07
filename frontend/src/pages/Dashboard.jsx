@@ -115,32 +115,52 @@ function Dashboard() {
       const accountsData = accountsRes.data.accounts || [];
       setAccounts(accountsData);
 
-      // If no account is selected yet, pick the first one
+      // Pick the active ID safely without triggering duplicate fetches
+      const activeId = selectedAccountId || accountsData[0]?._id;
+
       if (!selectedAccountId && accountsData.length > 0) {
         setSelectedAccountId(accountsData[0]._id);
       }
 
-      // 2. Fetch History for the SELECTED account
-      const currentId = selectedAccountId || accountsData[0]?._id;
-      if (currentId) {
-        const historyRes = await API.get(`/transaction/history/${currentId}?t=${Date.now()}`);
+      // 2. Fetch History for the ACTIVE account directly
+      if (activeId) {
+        const historyRes = await API.get(`/transaction/history/${activeId}?t=${Date.now()}`);
         setTransactions(historyRes.data);
       }
     } catch (err) {
-      const debugMsg = err.response?.data?.debug || "No debug info";
-      toast.error(`Could not load bank data. Reason: ${debugMsg}`);
       console.error("Dashboard Fetch Error:", err);
+      // Suppress temporary noise during redirect same-session mounts
+      if (err.response && err.response.status !== 401) {
+        const debugMsg = err.response?.data?.debug || "No debug info";
+        toast.error(`Could not load bank data. Reason: ${debugMsg}`);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  // Run ONCE on user mount
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user, selectedAccountId]);
+  }, [user]);
+
+  // Run ONLY when user manually changes selectedAccountId
+  useEffect(() => {
+    if (user && selectedAccountId) {
+      const fetchHistoryOnly = async () => {
+        try {
+          const historyRes = await API.get(`/transaction/history/${selectedAccountId}?t=${Date.now()}`);
+          setTransactions(historyRes.data);
+        } catch (err) {
+          console.error("History Fetch Error:", err);
+        }
+      };
+      fetchHistoryOnly();
+    }
+  }, [selectedAccountId]);
 
   // 2.5 REAL-TIME SOCKET LISTENER
   useEffect(() => {
