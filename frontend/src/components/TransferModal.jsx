@@ -57,7 +57,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
 
   // Magic UPI Link Generation (Only for UPI transfers)
   const upiLink = step === 2
-    ? `upi://pay?pa=${toAccount}&pn=${encodeURIComponent(recipientName || 'External User')}&am=${amount}&cu=INR`
+    ? `upi://pay?pa=${toAccount}&pn=${encodeURIComponent(recipientName || 'External User')}&am=${parseFloat(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent('P2P Transfer')}`
     : '';
 
   const handleRealUPITransfer = async (e) => {

@@ -19,7 +19,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
     }
     
     // Generate direct peer-to-peer UPI deposit link to kaliadivyansh77-1@oksbi
-    const directUpiLink = `upi://pay?pa=kaliadivyansh77-1@oksbi&pn=ApexBankDeposit&am=${parseFloat(amount).toFixed(2)}&cu=INR`;
+    const directUpiLink = `upi://pay?pa=kaliadivyansh77-1@oksbi&pn=${encodeURIComponent('DIVYANSH KALIA')}&am=${parseFloat(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent('Apex Bank Deposit')}`;
     setUpiIntentUrl(directUpiLink);
     setStep(2);
   };
