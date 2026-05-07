@@ -209,7 +209,7 @@ async function gethistory(req, res) {
         }
 
         // Auto-Healing: On-the-fly check for PENDING Instamojo transactions
-        const pendingTxns = transactions.filter(t => t.status === 'PENDING' && t.idempotencyKey && t.idempotencyKey.length > 10);
+        const pendingTxns = transactions.filter(t => t.status === 'PENDING' && t.idempotencyKey && t.idempotencyKey.length > 10).slice(0, 1);
         if (pendingTxns.length > 0) {
             for (const txn of pendingTxns) {
                 try {
