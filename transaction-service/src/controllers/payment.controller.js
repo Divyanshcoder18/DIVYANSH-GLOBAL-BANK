@@ -96,6 +96,16 @@ redisClient.on('error', (err) => {
     console.warn("⚠️ Redis Connection Alert (Payment Controller): Running with fallback. Details:", err.message);
 });
 
+function safePublish(channel, message) {
+    if (redisClient.status === 'ready') {
+        redisClient.publish(channel, message).catch(err => {
+            console.warn(`⚠️ Redis publish error on ${channel}:`, err.message);
+        });
+    } else {
+        console.log(`ℹ️ Redis is not ready (status: ${redisClient.status}). Skipping real-time update.`);
+    }
+}
+
 // 3. Verify P2P Payment (Direct to Recipient)
 async function verifyPaymentP2P(req, res) {
     try {
@@ -156,9 +166,8 @@ async function verifyPaymentP2P(req, res) {
             transaction: transaction._id, 
             type: "CREDIT" 
         }]);
-
         // Real-time Signal to recipient
-        redisClient.publish('payment_updates', JSON.stringify({
+        safePublish('payment_updates', JSON.stringify({
             userId: targetAccount.user,
             amount,
             status: 'SUCCESS',
@@ -166,7 +175,6 @@ async function verifyPaymentP2P(req, res) {
             fromName: req.user.name,
             type: 'TRANSFER_RECEIVED'
         }));
-
         res.status(200).json({ 
             success: true, 
             message: "P2P Payment verified and Recipient credited", 

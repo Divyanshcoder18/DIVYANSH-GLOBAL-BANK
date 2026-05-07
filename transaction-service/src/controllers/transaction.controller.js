@@ -21,6 +21,16 @@ redisClient.on('error', (err) => {
     console.warn("⚠️ Redis Connection Alert (Transaction Controller): Running with fallback. Details:", err.message);
 });
 
+function safePublish(channel, message) {
+    if (redisClient.status === 'ready') {
+        redisClient.publish(channel, message).catch(err => {
+            console.warn(`⚠️ Redis publish error on ${channel}:`, err.message);
+        });
+    } else {
+        console.log(`ℹ️ Redis is not ready (status: ${redisClient.status}). Skipping real-time update.`);
+    }
+}
+
 async function createtransfer(req, res) {
     const { fromaccount, toaccount, amount, idempotencyKey } = req.body;
 
@@ -92,16 +102,14 @@ async function createtransfer(req, res) {
 
         // 🚀 REAL-TIME SIGNAL (via Redis)
         if (!isExternal) {
-            redisClient.publish('payment_updates', JSON.stringify({
+            safePublish('payment_updates', JSON.stringify({
                 userId: targetAccount.user,
                 amount,
                 status: 'SUCCESS',
                 from: fromAccount._id,
                 type: 'TRANSFER_RECEIVED'
             }));
-        }
-
-        // RABBITMQ EVENT
+        }        // RABBITMQ EVENT
         publishTransactionEvent({
             type: isExternal ? "EXTERNAL_TRANSFER" : "TRANSFER",
             amount,
@@ -309,14 +317,13 @@ async function upiWebhook(req, res) {
 
         // 🚀 FIRE REAL-TIME NOTIFICATION TO FRONTEND
         try {
-            redisClient.publish('payment_updates', JSON.stringify({
+            safePublish('payment_updates', JSON.stringify({
                 userId: account.user,
                 amount: parseFloat(amount),
                 status: 'SUCCESS',
                 from: account._id,
                 type: 'DEPOSIT' // So the frontend knows it was a deposit
-            }));
-            console.log("Redis publish successful for webhook");
+            }));            console.log("Redis publish successful for webhook");
         } catch (redisErr) {
             console.error("Redis publish failed, but proceeding:", redisErr.message);
         }
@@ -416,7 +423,7 @@ async function checkDepositStatus(req, res) {
                         // Publish Redis updates for both users to refresh dashboards live
                         try {
                             const senderAccount = await accountmodel.findById(txn.fromaccount);
-                            redisClient.publish('payment_updates', JSON.stringify({
+                            safePublish('payment_updates', JSON.stringify({
                                 userId: senderAccount.user,
                                 amount: txn.amount,
                                 status: 'SUCCESS',
@@ -426,7 +433,7 @@ async function checkDepositStatus(req, res) {
 
                             if (txn.fromaccount.toString() !== txn.toaccount.toString()) {
                                 const receiverAccount = await accountmodel.findById(txn.toaccount);
-                                redisClient.publish('payment_updates', JSON.stringify({
+                                safePublish('payment_updates', JSON.stringify({
                                     userId: receiverAccount.user,
                                     amount: txn.amount,
                                     status: 'SUCCESS',
@@ -448,7 +455,7 @@ async function checkDepositStatus(req, res) {
 
                         try {
                             const account = await accountmodel.findById(txn.toaccount);
-                            redisClient.publish('payment_updates', JSON.stringify({
+                            safePublish('payment_updates', JSON.stringify({
                                 userId: account.user,
                                 amount: txn.amount,
                                 status: 'SUCCESS',
@@ -600,7 +607,7 @@ async function instamojoWebhook(req, res) {
 
             try {
                 const senderAccount = await accountmodel.findById(transaction.fromaccount);
-                redisClient.publish('payment_updates', JSON.stringify({
+                safePublish('payment_updates', JSON.stringify({
                     userId: senderAccount.user,
                     amount: parseFloat(amount),
                     status: 'SUCCESS',
@@ -610,7 +617,7 @@ async function instamojoWebhook(req, res) {
 
                 if (transaction.fromaccount.toString() !== transaction.toaccount.toString()) {
                     const receiverAccount = await accountmodel.findById(transaction.toaccount);
-                    redisClient.publish('payment_updates', JSON.stringify({
+                    safePublish('payment_updates', JSON.stringify({
                         userId: receiverAccount.user,
                         amount: parseFloat(amount),
                         status: 'SUCCESS',
@@ -628,7 +635,7 @@ async function instamojoWebhook(req, res) {
 
             try {
                 const account = await accountmodel.findById(transaction.toaccount);
-                redisClient.publish('payment_updates', JSON.stringify({
+                safePublish('payment_updates', JSON.stringify({
                     userId: account.user,
                     amount: parseFloat(amount),
                     status: 'SUCCESS',

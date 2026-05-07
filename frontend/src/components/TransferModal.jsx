@@ -68,37 +68,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
     if (!toAccount || !amount) return toast.error("Please fill all fields");
     if (!toAccount.includes('@')) return toast.error("Real UPI transfers require an '@' VPA (e.g. friend@bank)");
     
-    setLoading(true);
-    try {
-      const res = await API.post('/transaction/deposit/instamojo', {
-        amount: parseFloat(amount),
-        accountId: fromAccountId,
-        toAccount: toAccount
-      });
-
-      if (res.data.success && res.data.payment_url) {
-        toast.success("Opening Secure Instamojo payment window!");
-        window.open(res.data.payment_url, '_blank');
-        
-        onSuccess({
-          amount: parseFloat(amount),
-          from: fromAccountId,
-          type: 'TRANSFER_SENT'
-        });
-        
-        // Reset Modal State
-        setStep(1);
-        setToAccount('');
-        setAmount('');
-        onClose();
-      } else {
-        toast.error("Failed to initialize Instamojo gateway");
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Instamojo payment failed");
-    } finally {
-      setLoading(false);
-    }
+    setStep(2); // Instantly unlock the Direct Real-Money UPI QR Code & Mobile Deep Link screen!
   };
 
   const handleTransfer = async (e) => {
