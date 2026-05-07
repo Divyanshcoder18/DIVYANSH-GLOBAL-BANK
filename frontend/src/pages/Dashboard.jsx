@@ -44,6 +44,8 @@ function Dashboard() {
       tx.idempotencyKey?.startsWith('deposit_') || 
       tx.idempotencyKey?.startsWith('bonus-') || 
       tx.fromName === 'External Gateway' || 
+      tx.fromName === 'UPI Deposit' ||
+      tx.fromName?.includes('Deposit') ||
       tx.fromName?.includes('External UPI API')
     ) {
       return true;
@@ -479,7 +481,10 @@ function Dashboard() {
                           <p className="font-bold text-slate-200">
                             {tx.idempotencyKey?.startsWith('bonus-') 
                               ? "Welcome Bonus Credit" 
-                              : (!isIncome ? `Sent to ${tx.toName || 'Account'}` : `Received from ${tx.fromName || 'Unknown'}`)
+                              : (tx.fromName === 'UPI Deposit' || tx.fromName?.includes('Deposit')
+                                  ? `Deposited to ${tx.toName || 'Account'}`
+                                  : (!isIncome ? `Sent to ${tx.toName || 'Account'}` : `Received from ${tx.fromName || 'Unknown'}`)
+                                )
                             }
                           </p>
                           <p className="text-xs text-slate-500 font-medium">

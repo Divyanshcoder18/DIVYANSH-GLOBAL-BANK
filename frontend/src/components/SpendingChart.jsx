@@ -43,6 +43,8 @@ function SpendingChart({ transactions, currentAccountId }) {
                 tx.idempotencyKey?.startsWith('deposit_') || 
                 tx.idempotencyKey?.startsWith('bonus-') || 
                 tx.fromName === 'External Gateway' || 
+                tx.fromName === 'UPI Deposit' ||
+                tx.fromName?.includes('Deposit') ||
                 tx.fromName?.includes('External UPI API')
             ) {
                 isIncome = true;
