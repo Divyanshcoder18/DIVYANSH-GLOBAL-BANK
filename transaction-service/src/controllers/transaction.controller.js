@@ -194,6 +194,19 @@ async function gethistory(req, res) {
             $or: [{ fromaccount: accountId }, { toaccount: accountId }]
         }).sort({ createdAt: -1 });
 
+        // Auto-Correction: Fix any mistakenly created CREDIT ledgers for external/internal Instamojo transfers retroactively!
+        for (const txn of transactions) {
+            if (txn.status === 'SUCCESS' && txn.fromName && txn.fromName.includes('(via Instamojo)')) {
+                const ledgers = await ledgermodel.find({ transaction: txn._id });
+                if (ledgers.length === 1 && ledgers[0].type === 'CREDIT') {
+                    // Swap to DEBIT so sender's balance is correctly deducted!
+                    ledgers[0].type = 'DEBIT';
+                    ledgers[0].account = txn.fromaccount;
+                    await ledgers[0].save();
+                }
+            }
+        }
+
         // Auto-Healing: On-the-fly check for PENDING Instamojo transactions
         const pendingTxns = transactions.filter(t => t.status === 'PENDING' && t.idempotencyKey && t.idempotencyKey.length > 10);
         if (pendingTxns.length > 0) {
@@ -219,11 +232,11 @@ async function gethistory(req, res) {
 
                             const ledgerExists = await ledgermodel.findOne({ transaction: txn._id });
                             if (!ledgerExists) {
-                                if (txn.fromaccount && txn.fromaccount.toString() !== txn.toaccount.toString()) {
-                                    await ledgermodel.create([
-                                        { account: txn.fromaccount, amount: txn.amount, transaction: txn._id, type: "DEBIT" },
-                                        { account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }
-                                    ]);
+                                if (txn.fromName && txn.fromName.includes('(via Instamojo)')) {
+                                    await ledgermodel.create([{ account: txn.fromaccount, amount: txn.amount, transaction: txn._id, type: "DEBIT" }]);
+                                    if (txn.fromaccount.toString() !== txn.toaccount.toString()) {
+                                        await ledgermodel.create([{ account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }]);
+                                    }
                                 } else {
                                     await ledgermodel.create([{ account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }]);
                                 }
@@ -386,18 +399,18 @@ async function checkDepositStatus(req, res) {
                 // Update the ledger if not already processed
                 const ledgerExists = await ledgermodel.findOne({ transaction: txn._id });
                 if (!ledgerExists) {
-                    if (txn.fromaccount && txn.fromaccount.toString() !== txn.toaccount.toString()) {
-                        // It's a Transfer! Create DEBIT for sender, CREDIT for recipient
-                        await ledgermodel.create([
-                            { account: txn.fromaccount, amount: txn.amount, transaction: txn._id, type: "DEBIT" },
-                            { account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }
-                        ]);
+                    if (txn.fromName && txn.fromName.includes('(via Instamojo)')) {
+                        // It's a Transfer! Create DEBIT for sender
+                        await ledgermodel.create([{ account: txn.fromaccount, amount: txn.amount, transaction: txn._id, type: "DEBIT" }]);
+
+                        // If local transfer, also create CREDIT for recipient
+                        if (txn.fromaccount.toString() !== txn.toaccount.toString()) {
+                            await ledgermodel.create([{ account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }]);
+                        }
 
                         // Publish Redis updates for both users to refresh dashboards live
                         try {
                             const senderAccount = await accountmodel.findById(txn.fromaccount);
-                            const receiverAccount = await accountmodel.findById(txn.toaccount);
-                            
                             redisClient.publish('payment_updates', JSON.stringify({
                                 userId: senderAccount.user,
                                 amount: txn.amount,
@@ -406,13 +419,16 @@ async function checkDepositStatus(req, res) {
                                 type: 'TRANSFER_SENT'
                             }));
 
-                            redisClient.publish('payment_updates', JSON.stringify({
-                                userId: receiverAccount.user,
-                                amount: txn.amount,
-                                status: 'SUCCESS',
-                                from: receiverAccount._id,
-                                type: 'TRANSFER_RECEIVED'
-                            }));
+                            if (txn.fromaccount.toString() !== txn.toaccount.toString()) {
+                                const receiverAccount = await accountmodel.findById(txn.toaccount);
+                                redisClient.publish('payment_updates', JSON.stringify({
+                                    userId: receiverAccount.user,
+                                    amount: txn.amount,
+                                    status: 'SUCCESS',
+                                    from: receiverAccount._id,
+                                    type: 'TRANSFER_RECEIVED'
+                                }));
+                            }
                         } catch (rErr) {
                             console.error("Redis status publish error (Transfer):", rErr.message);
                         }
@@ -568,17 +584,17 @@ async function instamojoWebhook(req, res) {
         // Maintain idempotencyKey as the original payment_request_id so frontend polling finds it perfectly!
         await transaction.save();
 
-        if (transaction.fromaccount && transaction.fromaccount.toString() !== transaction.toaccount.toString()) {
-            // It's a Transfer! Create DEBIT for sender, CREDIT for recipient
-            await ledgermodel.create([
-                { account: transaction.fromaccount, amount: parseFloat(amount), transaction: transaction._id, type: "DEBIT" },
-                { account: transaction.toaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }
-            ]);
+        if (transaction.fromName && transaction.fromName.includes('(via Instamojo)')) {
+            // It's a Transfer! Create DEBIT for sender
+            await ledgermodel.create([{ account: transaction.fromaccount, amount: parseFloat(amount), transaction: transaction._id, type: "DEBIT" }]);
+
+            // If local transfer, also create CREDIT for recipient
+            if (transaction.fromaccount.toString() !== transaction.toaccount.toString()) {
+                await ledgermodel.create([{ account: transaction.toaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }]);
+            }
 
             try {
                 const senderAccount = await accountmodel.findById(transaction.fromaccount);
-                const receiverAccount = await accountmodel.findById(transaction.toaccount);
-                
                 redisClient.publish('payment_updates', JSON.stringify({
                     userId: senderAccount.user,
                     amount: parseFloat(amount),
@@ -587,13 +603,16 @@ async function instamojoWebhook(req, res) {
                     type: 'TRANSFER_SENT'
                 }));
 
-                redisClient.publish('payment_updates', JSON.stringify({
-                    userId: receiverAccount.user,
-                    amount: parseFloat(amount),
-                    status: 'SUCCESS',
-                    from: receiverAccount._id,
-                    type: 'TRANSFER_RECEIVED'
-                }));
+                if (transaction.fromaccount.toString() !== transaction.toaccount.toString()) {
+                    const receiverAccount = await accountmodel.findById(transaction.toaccount);
+                    redisClient.publish('payment_updates', JSON.stringify({
+                        userId: receiverAccount.user,
+                        amount: parseFloat(amount),
+                        status: 'SUCCESS',
+                        from: receiverAccount._id,
+                        type: 'TRANSFER_RECEIVED'
+                    }));
+                }
                 console.log("Redis published successfully for Instamojo Transfer Webhook");
             } catch (redisErr) {
                 console.error("Redis fallback publish failed (Transfer):", redisErr.message);
