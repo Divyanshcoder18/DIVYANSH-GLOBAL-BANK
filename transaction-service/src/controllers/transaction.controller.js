@@ -328,28 +328,60 @@ async function checkDepositStatus(req, res) {
                 txn.status = 'SUCCESS';
                 await txn.save();
 
-                // Credit the ledger if not already credited
+                // Update the ledger if not already processed
                 const ledgerExists = await ledgermodel.findOne({ transaction: txn._id });
                 if (!ledgerExists) {
-                    await ledgermodel.create([{ 
-                        account: txn.toaccount, 
-                        amount: txn.amount, 
-                        transaction: txn._id, 
-                        type: "CREDIT" 
-                    }]);
+                    if (txn.fromaccount && txn.fromaccount.toString() !== txn.toaccount.toString()) {
+                        // It's a Transfer! Create DEBIT for sender, CREDIT for recipient
+                        await ledgermodel.create([
+                            { account: txn.fromaccount, amount: txn.amount, transaction: txn._id, type: "DEBIT" },
+                            { account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }
+                        ]);
 
-                    // Publish redis notification so frontend gets credited live
-                    try {
-                        const account = await accountmodel.findById(txn.toaccount);
-                        redisClient.publish('payment_updates', JSON.stringify({
-                            userId: account.user,
-                            amount: txn.amount,
-                            status: 'SUCCESS',
-                            from: account._id,
-                            type: 'DEPOSIT'
-                        }));
-                    } catch (rErr) {
-                        console.error("Redis status publish error:", rErr.message);
+                        // Publish Redis updates for both users to refresh dashboards live
+                        try {
+                            const senderAccount = await accountmodel.findById(txn.fromaccount);
+                            const receiverAccount = await accountmodel.findById(txn.toaccount);
+                            
+                            redisClient.publish('payment_updates', JSON.stringify({
+                                userId: senderAccount.user,
+                                amount: txn.amount,
+                                status: 'SUCCESS',
+                                from: senderAccount._id,
+                                type: 'TRANSFER_SENT'
+                            }));
+
+                            redisClient.publish('payment_updates', JSON.stringify({
+                                userId: receiverAccount.user,
+                                amount: txn.amount,
+                                status: 'SUCCESS',
+                                from: receiverAccount._id,
+                                type: 'TRANSFER_RECEIVED'
+                            }));
+                        } catch (rErr) {
+                            console.error("Redis status publish error (Transfer):", rErr.message);
+                        }
+                    } else {
+                        // It's a Deposit! Only CREDIT for account
+                        await ledgermodel.create([{ 
+                            account: txn.toaccount, 
+                            amount: txn.amount, 
+                            transaction: txn._id, 
+                            type: "CREDIT" 
+                        }]);
+
+                        try {
+                            const account = await accountmodel.findById(txn.toaccount);
+                            redisClient.publish('payment_updates', JSON.stringify({
+                                userId: account.user,
+                                amount: txn.amount,
+                                status: 'SUCCESS',
+                                from: account._id,
+                                type: 'DEPOSIT'
+                            }));
+                        } catch (rErr) {
+                            console.error("Redis status publish error (Deposit):", rErr.message);
+                        }
                     }
                 }
 
@@ -481,21 +513,53 @@ async function instamojoWebhook(req, res) {
         // Maintain idempotencyKey as the original payment_request_id so frontend polling finds it perfectly!
         await transaction.save();
 
-        await ledgermodel.create([{ account: transaction.toaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }]);
+        if (transaction.fromaccount && transaction.fromaccount.toString() !== transaction.toaccount.toString()) {
+            // It's a Transfer! Create DEBIT for sender, CREDIT for recipient
+            await ledgermodel.create([
+                { account: transaction.fromaccount, amount: parseFloat(amount), transaction: transaction._id, type: "DEBIT" },
+                { account: transaction.toaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }
+            ]);
 
-        const account = await accountmodel.findById(transaction.toaccount);
+            try {
+                const senderAccount = await accountmodel.findById(transaction.fromaccount);
+                const receiverAccount = await accountmodel.findById(transaction.toaccount);
+                
+                redisClient.publish('payment_updates', JSON.stringify({
+                    userId: senderAccount.user,
+                    amount: parseFloat(amount),
+                    status: 'SUCCESS',
+                    from: senderAccount._id,
+                    type: 'TRANSFER_SENT'
+                }));
 
-        try {
-            redisClient.publish('payment_updates', JSON.stringify({
-                userId: account.user,
-                amount: parseFloat(amount),
-                status: 'SUCCESS',
-                from: account._id,
-                type: 'DEPOSIT'
-            }));
-            console.log("Redis published successfully for Instamojo webhook");
-        } catch (redisErr) {
-            console.error("Redis fallback publish failed:", redisErr.message);
+                redisClient.publish('payment_updates', JSON.stringify({
+                    userId: receiverAccount.user,
+                    amount: parseFloat(amount),
+                    status: 'SUCCESS',
+                    from: receiverAccount._id,
+                    type: 'TRANSFER_RECEIVED'
+                }));
+                console.log("Redis published successfully for Instamojo Transfer Webhook");
+            } catch (redisErr) {
+                console.error("Redis fallback publish failed (Transfer):", redisErr.message);
+            }
+        } else {
+            // It's a Deposit! Only CREDIT for account
+            await ledgermodel.create([{ account: transaction.toaccount, amount: parseFloat(amount), transaction: transaction._id, type: "CREDIT" }]);
+
+            try {
+                const account = await accountmodel.findById(transaction.toaccount);
+                redisClient.publish('payment_updates', JSON.stringify({
+                    userId: account.user,
+                    amount: parseFloat(amount),
+                    status: 'SUCCESS',
+                    from: account._id,
+                    type: 'DEPOSIT'
+                }));
+                console.log("Redis published successfully for Instamojo Webhook");
+            } catch (redisErr) {
+                console.error("Redis fallback publish failed:", redisErr.message);
+            }
         }
 
         res.status(200).send("Webhook Processed Successfully");
