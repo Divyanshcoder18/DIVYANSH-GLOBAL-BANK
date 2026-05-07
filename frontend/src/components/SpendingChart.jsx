@@ -38,8 +38,13 @@ function SpendingChart({ transactions, currentAccountId }) {
         if (tx.fromaccount !== tx.toaccount) {
             isIncome = tx.toaccount === currentAccountId;
         } else {
-            // If fromaccount === toaccount (Deposit, Withdrawal, or External Transfer)
-            if (tx.idempotencyKey?.startsWith('deposit_') || tx.fromName === 'External Gateway' || tx.fromName?.includes('External UPI API')) {
+            // If fromaccount === toaccount (Deposit, Withdrawal, Welcome Bonus, or External Transfer)
+            if (
+                tx.idempotencyKey?.startsWith('deposit_') || 
+                tx.idempotencyKey?.startsWith('bonus-') || 
+                tx.fromName === 'External Gateway' || 
+                tx.fromName?.includes('External UPI API')
+            ) {
                 isIncome = true;
             }
         }
