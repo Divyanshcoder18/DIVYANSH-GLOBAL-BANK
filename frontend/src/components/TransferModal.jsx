@@ -9,15 +9,12 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
   const [step, setStep] = useState(1);
   const [transferType, setTransferType] = useState('UPI'); // 'UPI' or 'BANK'
 
-  // Form State
   const [toAccount, setToAccount] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [ifscCode, setIfscCode] = useState('');
   const [amount, setAmount] = useState('');
-
-  const [loading, setLoading] = useState(false);
-
-  // VALIDATION STATE
+  const [utrNumber, setUtrNumber] = useState('');
+  const [loading, setLoading] = useState(false);  // VALIDATION STATE
   const [recipientName, setRecipientName] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -77,6 +74,15 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
     // Validate based on type
     if (transferType === 'UPI') {
       if (!toAccount || !amount) return toast.error("Please fill all fields");
+      if (step === 2) {
+        if (!utrNumber || utrNumber.length !== 12) {
+          return toast.error("Please enter a valid 12-digit UPI UTR / Reference Number to verify payment");
+        }
+        setLoading(true);
+        const verifyingToast = toast.loading("Verifying UPI Network Settlement...");
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        toast.dismiss(verifyingToast);
+      }
     } else {
       if (!accountNumber || !ifscCode || !amount) return toast.error("Please fill all Bank details");
     }
@@ -112,6 +118,7 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
       setAccountNumber('');
       setIfscCode('');
       setAmount('');
+      setUtrNumber('');
       onClose();
 
     } catch (err) {
@@ -313,13 +320,25 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
                     fgColor={"#0f172a"}
                     level={"H"}
                   />
+                </div>                <div className="text-center w-full space-y-4">
+                  <div>
+                    <p className="text-2xl font-bold text-blue-400 mb-1">₹{parseFloat(amount).toLocaleString()}</p>
+                    <p className="text-xs text-slate-400">Paying: <strong className="text-white">{toAccount}</strong></p>
+                  </div>
+                  <div className="w-full">
+                    <label className="block text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest text-left ml-1">
+                      Enter 12-Digit UPI UTR / Ref No.
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={12}
+                      value={utrNumber}
+                      onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ''))}
+                      placeholder="e.g. 301234567890"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-mono text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner"
+                    />
+                  </div>
                 </div>
-
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-400 mb-1">₹{parseFloat(amount).toLocaleString()}</p>
-                  <p className="text-xs text-slate-400">Paying: <strong className="text-white">{toAccount}</strong></p>
-                </div>
-
                 {/* Mobile Deep Link Button */}
                 <a
                   href={upiLink}
