@@ -194,6 +194,54 @@ async function gethistory(req, res) {
             $or: [{ fromaccount: accountId }, { toaccount: accountId }]
         }).sort({ createdAt: -1 });
 
+        // Auto-Healing: On-the-fly check for PENDING Instamojo transactions
+        const pendingTxns = transactions.filter(t => t.status === 'PENDING' && t.idempotencyKey && t.idempotencyKey.length > 10);
+        if (pendingTxns.length > 0) {
+            for (const txn of pendingTxns) {
+                try {
+                    const endpoint = process.env.INSTAMOJO_ENV === 'sandbox'
+                        ? `https://test.instamojo.com/api/1.1/payment-requests/${txn.idempotencyKey}/`
+                        : `https://www.instamojo.com/api/1.1/payment-requests/${txn.idempotencyKey}/`;
+
+                    const response = await axios.get(endpoint, {
+                        headers: {
+                            'X-Api-Key': process.env.INSTAMOJO_API_KEY,
+                            'X-Auth-Token': process.env.INSTAMOJO_AUTH_TOKEN
+                        },
+                        timeout: 5000
+                    });
+
+                    if (response.data && response.data.success) {
+                        const pm_status = response.data.payment_request.status;
+                        if (pm_status === 'Completed' || pm_status === 'Paid' || pm_status === 'Credit') {
+                            txn.status = 'SUCCESS';
+                            await txn.save();
+
+                            const ledgerExists = await ledgermodel.findOne({ transaction: txn._id });
+                            if (!ledgerExists) {
+                                if (txn.fromaccount && txn.fromaccount.toString() !== txn.toaccount.toString()) {
+                                    await ledgermodel.create([
+                                        { account: txn.fromaccount, amount: txn.amount, transaction: txn._id, type: "DEBIT" },
+                                        { account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }
+                                    ]);
+                                } else {
+                                    await ledgermodel.create([{ account: txn.toaccount, amount: txn.amount, transaction: txn._id, type: "CREDIT" }]);
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Auto-heal failed for transaction ${txn._id}:`, err.message);
+                }
+            }
+            
+            // Re-fetch updated transactions list so the response reflects successes instantly
+            const updatedTransactions = await transactionmodel.find({
+                $or: [{ fromaccount: accountId }, { toaccount: accountId }]
+            }).sort({ createdAt: -1 });
+            return res.status(200).json(updatedTransactions);
+        }
+
         res.status(200).json(transactions);
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
