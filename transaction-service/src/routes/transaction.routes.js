@@ -4,6 +4,8 @@ const { createtransfer, gethistory, createdeposit, createwithdraw, upiWebhook, c
 const { createOrder, verifyPayment, verifyPaymentP2P, razorpayWebhook, initiateRealPayout, initiateRealP2PTransfer } = require('../controllers/payment.controller.js');
 const { authmiddleware } = require('../middleware/auth.middleware.js');
 
+const { linkBank, getLinkedBanks, checkBalance } = require('../controllers/bank.controller.js');
+
 // Standardized routes PROTECTED by authentication
 router.post('/transfer', authmiddleware, createtransfer);
 router.get('/history/:accountId', authmiddleware, gethistory);
@@ -12,6 +14,11 @@ router.post('/deposit/upi-intent', authmiddleware, createUpiIntent);
 router.post('/deposit/instamojo', authmiddleware, createInstamojoPayment);
 router.get('/deposit/status/:client_txn_id', authmiddleware, checkDepositStatus);
 router.post('/withdraw', authmiddleware, createwithdraw);
+
+// Linked Bank Account Routes (Simulated GPay UPI)
+router.post('/banks/link', authmiddleware, linkBank);
+router.get('/banks', authmiddleware, getLinkedBanks);
+router.post('/banks/balance', authmiddleware, checkBalance);
 
 // Razorpay Payment & Payout Routes
 router.post('/payment/order', authmiddleware, createOrder);
