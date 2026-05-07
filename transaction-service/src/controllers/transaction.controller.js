@@ -9,8 +9,12 @@ const Redis = require('ioredis');
 const axios = require('axios');
 
 const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-    maxRetriesPerRequest: 3,
-    connectTimeout: 5000
+    maxRetriesPerRequest: 1,
+    connectTimeout: 2000,
+    retryStrategy(times) {
+        if (times > 3) return null; // Stop reconnecting to prevent log flooding and crashes
+        return Math.min(times * 1000, 5000);
+    }
 });
 
 redisClient.on('error', (err) => {
