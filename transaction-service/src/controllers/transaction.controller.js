@@ -252,7 +252,7 @@ async function gethistory(req, res) {
                     console.error(`Auto-heal failed for transaction ${txn._id}:`, err.message);
                 }
             }
-            
+
             // Re-fetch updated transactions list so the response reflects successes instantly
             const updatedTransactions = await transactionmodel.find({
                 $or: [{ fromaccount: accountId }, { toaccount: accountId }]
@@ -373,7 +373,7 @@ async function checkDepositStatus(req, res) {
     try {
         const { client_txn_id } = req.params;
         const txn = await transactionmodel.findOne({ idempotencyKey: client_txn_id });
-        
+
         if (!txn) {
             return res.status(404).json({ success: false, message: "Transaction not found" });
         }
@@ -439,11 +439,11 @@ async function checkDepositStatus(req, res) {
                         }
                     } else {
                         // It's a Deposit! Only CREDIT for account
-                        await ledgermodel.create([{ 
-                            account: txn.toaccount, 
-                            amount: txn.amount, 
-                            transaction: txn._id, 
-                            type: "CREDIT" 
+                        await ledgermodel.create([{
+                            account: txn.toaccount,
+                            amount: txn.amount,
+                            transaction: txn._id,
+                            type: "CREDIT"
                         }]);
 
                         try {
@@ -474,7 +474,7 @@ async function checkDepositStatus(req, res) {
 
 async function createInstamojoPayment(req, res) {
     const { amount, accountId, toAccount } = req.body;
-    
+
     if (!amount || !accountId) {
         return res.status(400).json({ success: false, message: "Missing amount or accountId" });
     }
@@ -505,8 +505,8 @@ async function createInstamojoPayment(req, res) {
         }
 
         const isSandbox = process.env.INSTAMOJO_ENV === 'sandbox';
-        const endpoint = isSandbox 
-            ? 'https://test.instamojo.com/api/1.1/payment-requests/' 
+        const endpoint = isSandbox
+            ? 'https://test.instamojo.com/api/1.1/payment-requests/'
             : 'https://www.instamojo.com/api/1.1/payment-requests/';
 
         const params = new URLSearchParams();

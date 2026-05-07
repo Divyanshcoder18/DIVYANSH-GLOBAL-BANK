@@ -10,7 +10,12 @@ async function connectRabbitMQ() {
         try {
             console.log(`[RABBITMQ] Attempting to connect... (Retries left: ${retries})`);
             const connection = await amqp.connect(process.env.RABBITMQ_URI || 'amqp://localhost');
+            connection.on('error', (err) => console.error("[RABBITMQ] Connection error:", err.message));
+            connection.on('close', () => console.log("[RABBITMQ] Connection closed. Reconnecting..."));
+
             channel = await connection.createChannel();
+            channel.on('error', (err) => console.error("[RABBITMQ] Channel error:", err.message));
+            channel.on('close', () => console.log("[RABBITMQ] Channel closed."));
             
             // Use Fanout so ALL services (Audit, Fraud, etc) get every transaction
             await channel.assertExchange(exchange, 'fanout', { durable: true });
