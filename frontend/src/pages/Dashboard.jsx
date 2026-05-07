@@ -77,7 +77,7 @@ function Dashboard() {
       head: [['Description', 'Details']],
       body: [
         ['Type', isIncome ? 'Credit (Payment Received)' : 'Debit (Transfer Sent)'],
-        ['Amount', `₹${tx.amount.toLocaleString()}`],
+        ['Amount', `INR ${tx.amount.toLocaleString()}`],
         ['Account ID', isIncome ? tx.toaccount : tx.fromaccount],
         ['Counterparty', isIncome ? tx.fromaccount : tx.toaccount],
       ],
