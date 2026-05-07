@@ -200,9 +200,10 @@ async function gethistory(req, res) {
                 const ledgers = await ledgermodel.find({ transaction: txn._id });
                 if (ledgers.length === 1 && ledgers[0].type === 'CREDIT') {
                     // Swap to DEBIT so sender's balance is correctly deducted!
-                    ledgers[0].type = 'DEBIT';
-                    ledgers[0].account = txn.fromaccount;
-                    await ledgers[0].save();
+                    await ledgermodel.collection.updateOne(
+                        { _id: ledgers[0]._id },
+                        { $set: { type: 'DEBIT', account: txn.fromaccount } }
+                    );
                 }
             }
         }
