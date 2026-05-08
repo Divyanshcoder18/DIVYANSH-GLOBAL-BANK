@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, AlertCircle, CheckCircle2, QrCode, Plus, Landmark } from 'lucide-react';
+import { X, Send, AlertCircle, CheckCircle2, QrCode, Plus, Landmark, Copy } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import API from '../api/axios';
 import { toast } from 'react-hot-toast';
@@ -339,14 +339,41 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
                     />
                   </div>
                 </div>
-                {/* Mobile Deep Link Button */}
-                <a
-                  href={upiLink}
-                  className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 md:hidden"
+                {/* Copy UPI ID Button */}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(toAccount);
+                    toast.success("Recipient UPI ID Copied!");
+                  }}
+                  type="button"
+                  className="w-full bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 text-xs"
                 >
-                  <Plus size={16} />
-                  <span>Open in UPI App (Mobile Only)</span>
-                </a>
+                  <Copy size={14} />
+                  <span>Copy Recipient UPI ID ({toAccount})</span>
+                </button>
+
+                {/* Mobile Deep Link Button */}
+                <div className="w-full space-y-2 md:hidden flex flex-col">
+                  <a
+                    href={upiLink}
+                    className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 text-xs"
+                  >
+                    <Plus size={14} />
+                    <span>Open in UPI App (Pre-filled)</span>
+                  </a>
+
+                  {/* Alternative Limit Bypass Button */}
+                  <a
+                    href={`upi://pay?pa=${toAccount}&pn=${encodeURIComponent(recipientName || 'External User')}&cu=INR&tn=${encodeURIComponent('P2P Transfer')}`}
+                    className="w-full bg-amber-600/10 hover:bg-amber-600/20 border border-amber-600/30 text-amber-400 font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 text-xs"
+                  >
+                    <AlertCircle size={14} />
+                    <span>GPay Bypass (No Pre-filled Amount)</span>
+                  </a>
+                  <p className="text-[10px] text-amber-500/70 text-center leading-normal">
+                    *Use the GPay Bypass if you get a "bank limit" error. You can then enter ₹{amount} manually in GPay!
+                  </p>
+                </div>
 
                 <div className="w-full border-t border-slate-800 my-2"></div>
                 <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl w-full">
