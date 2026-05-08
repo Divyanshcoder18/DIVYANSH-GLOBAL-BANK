@@ -18,8 +18,8 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
       return toast.error("Please enter a valid amount");
     }
     
-    // Generate direct peer-to-peer UPI deposit link to kaliadivyansh77-1@oksbi
-    const directUpiLink = `upi://pay?pa=kaliadivyansh77-1@oksbi&pn=${encodeURIComponent('DIVYANSH KALIA')}&am=${parseFloat(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent('Apex Bank Deposit')}`;
+    // Generate direct peer-to-peer UPI deposit link to BHARATPE2F0X0Q2H0C26763@unitype
+    const directUpiLink = `upi://pay?pa=BHARATPE2F0X0Q2H0C26763@unitype&pn=${encodeURIComponent('APEX Global Bank')}&am=${parseFloat(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent('Apex Bank Deposit')}`;
     setUpiIntentUrl(directUpiLink);
     setStep(2);
   };
@@ -142,7 +142,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                 <div className="text-center w-full space-y-4">
                   <div>
                     <p className="text-3xl font-bold text-emerald-400 mb-1">₹{parseFloat(amount).toLocaleString()}</p>
-                    <p className="text-xs text-slate-400">Scan QR to pay directly to <strong className="text-white">kaliadivyansh77-1@oksbi</strong></p>
+                    <p className="text-xs text-slate-400">Scan QR to pay directly to <strong className="text-white">BHARATPE2F0X0Q2H0C26763@unitype</strong></p>
                   </div>
                   
                   <div className="w-full">
@@ -163,14 +163,14 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                  {/* Copy UPI ID Button */}
                  <button
                    onClick={() => {
-                     navigator.clipboard.writeText('kaliadivyansh77-1@oksbi');
+                     navigator.clipboard.writeText('BHARATPE2F0X0Q2H0C26763@unitype');
                      toast.success("UPI ID Copied!");
                    }}
                    type="button"
                    className="w-full bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 text-xs"
                  >
                    <Copy size={14} />
-                   <span>Copy UPI ID (kaliadivyansh77-1@oksbi)</span>
+                   <span>Copy UPI ID (BHARATPE2F0X0Q2H0C26763@unitype)</span>
                  </button>
 
                  {/* Mobile Deep Link Button */}
@@ -185,7 +185,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
 
                    {/* Alternative Limit Bypass Button */}
                    <a
-                     href={`upi://pay?pa=kaliadivyansh77-1@oksbi&pn=${encodeURIComponent('DIVYANSH KALIA')}&cu=INR&tn=${encodeURIComponent('Deposit')}`}
+                     href={`upi://pay?pa=BHARATPE2F0X0Q2H0C26763@unitype&pn=${encodeURIComponent('APEX Global Bank')}&cu=INR&tn=${encodeURIComponent('Deposit')}`}
                      className="w-full bg-amber-600/10 hover:bg-amber-600/20 border border-amber-600/30 text-amber-400 font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 text-xs"
                    >
                      <AlertCircle size={14} />
