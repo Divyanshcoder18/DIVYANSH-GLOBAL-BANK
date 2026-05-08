@@ -6,9 +6,12 @@ import { toast } from 'react-hot-toast';
 
 const ScannerModal = ({ isOpen, onClose, onScanSuccess }) => {
     const [scanner, setScanner] = useState(null);
+    const [hasCameraError, setHasCameraError] = useState(false);
+    const [retryTrigger, setRetryTrigger] = useState(0);
 
     useEffect(() => {
         if (isOpen) {
+            setHasCameraError(false);
             const html5QrCode = new Html5Qrcode("reader");
             setScanner(html5QrCode);
 
@@ -42,16 +45,17 @@ const ScannerModal = ({ isOpen, onClose, onScanSuccess }) => {
             html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
                 .catch(err => {
                     console.error("Camera access error:", err);
-                    toast.error("Could not access camera");
+                    setHasCameraError(true);
+                    toast.error("Camera access was blocked or denied.");
                 });
 
             return () => {
                 if (html5QrCode.isScanning) {
-                    html5QrCode.stop();
+                    html5QrCode.stop().catch(e => console.warn("Stop error:", e));
                 }
             };
         }
-    }, [isOpen]);
+    }, [isOpen, retryTrigger]);
 
     return (
         <AnimatePresence>
@@ -85,27 +89,47 @@ const ScannerModal = ({ isOpen, onClose, onScanSuccess }) => {
                         </div>
 
                         {/* Scanner Viewport */}
-                        <div className="relative aspect-square bg-black">
-                            <div id="reader" className="w-full h-full"></div>
-                            
-                            {/* Scanning Animation Overlay */}
-                            <div className="absolute inset-0 pointer-events-none border-[40px] border-black/40">
-                                <div className="w-full h-full border-2 border-blue-500/30 rounded-3xl relative">
-                                    <motion.div 
-                                        animate={{ top: ['0%', '100%', '0%'] }}
-                                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                                        className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]"
-                                    />
-                                    
-                                    {/* Corner Accents */}
-                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-xl"></div>
-                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-xl"></div>
-                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-xl"></div>
-                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-xl"></div>
+                        <div className="relative aspect-square bg-black flex flex-col items-center justify-center p-6 text-center">
+                            {hasCameraError ? (
+                                <div className="space-y-4 z-10">
+                                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl max-w-xs mx-auto">
+                                        <p className="text-sm font-bold text-red-400 mb-1">Camera Access Blocked</p>
+                                        <p className="text-xs text-slate-400 leading-normal">
+                                            Please click the lock 🔒 icon in your browser's address bar, set Camera permission to "Allow", and try again.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setRetryTrigger(prev => prev + 1)}
+                                        className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2 mx-auto"
+                                    >
+                                        <RefreshCw size={14} className="animate-spin" />
+                                        <span>Retry Camera Permission</span>
+                                    </button>
                                 </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <div id="reader" className="w-full h-full"></div>
+                                    
+                                    {/* Scanning Animation Overlay */}
+                                    <div className="absolute inset-0 pointer-events-none border-[40px] border-black/40">
+                                        <div className="w-full h-full border-2 border-blue-500/30 rounded-3xl relative">
+                                            <motion.div 
+                                                animate={{ top: ['0%', '100%', '0%'] }}
+                                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+                                            />
+                                            
+                                            {/* Corner Accents */}
+                                            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500 rounded-tl-xl"></div>
+                                            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500 rounded-tr-xl"></div>
+                                            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500 rounded-bl-xl"></div>
+                                            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-500 rounded-br-xl"></div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
-
+ 
                         {/* Footer Info */}
                         <div className="p-8 text-center bg-slate-900/50">
                             <div className="flex items-center justify-center gap-2 text-slate-400 mb-2">

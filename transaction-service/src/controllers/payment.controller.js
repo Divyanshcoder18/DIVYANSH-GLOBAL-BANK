@@ -211,7 +211,7 @@ async function razorpayWebhook(req, res) {
 
         // Process Event
         const event = JSON.parse(rawBody);
-        
+         // ye basically tera payment ka data hai jo razorpay se ayega
         if (event.event === 'payment.captured') {
             const payment = event.payload.payment.entity;
             console.log(`[WEBHOOK] Payment Captured: ₹${payment.amount / 100} (${payment.id})`);
@@ -220,7 +220,6 @@ async function razorpayWebhook(req, res) {
             // and update the status to SUCCESS, then credit the user's account.
             // For now, we just acknowledge receipt to Razorpay.
         }
-
         // Important: Always return 200 OK to Razorpay so they know you got it
         res.status(200).send('OK');
     } catch (error) {
