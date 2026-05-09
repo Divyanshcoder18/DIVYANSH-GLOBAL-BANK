@@ -122,7 +122,12 @@ function TransferModal({ isOpen, onClose, fromAccountId, userEmail, onSuccess, i
       onClose();
 
     } catch (err) {
-      toast.error(err.response?.data?.message || "Transfer failed");
+      const apiErr = err.response?.data;
+      if (apiErr?.reason) {
+        toast.error(`Auth Failed: ${apiErr.reason}${apiErr.details ? ` (${apiErr.details})` : ''}`);
+      } else {
+        toast.error(apiErr?.message || "Transfer failed");
+      }
     } finally {
       setLoading(false);
     }

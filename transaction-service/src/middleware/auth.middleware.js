@@ -7,37 +7,59 @@ async function authmiddleware(req, res, next) {
     let token = req.cookies.token || (authHeader && (authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader));
 
     if (!token) {
-        return res.status(401).json({ message: "unauthorized access" });
+        console.log("❌ Auth Failed: No token found");
+        return res.status(401).json({ message: "unauthorized access", reason: "no_token" });
     }
 
     try {
         const isblacklisted = await tokenblacklistmodel.findOne({ token });
-        if (isblacklisted) return res.status(401).json({ message: "unauthorized access" });
+        if (isblacklisted) {
+            console.log("❌ Auth Failed: Token blacklisted");
+            return res.status(401).json({ message: "unauthorized access", reason: "blacklisted" });
+        }
 
-        let decoded;
+        let decoded = null;
+        let authMethod = "none";
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET || 'BANKING_FORCED_SECRET_999');
+            authMethod = "env_or_forced_secret";
         } catch (err) {
             try {
                 decoded = jwt.verify(token, 'divu123');
+                authMethod = "divu123";
             } catch (err2) {
                 try {
                     decoded = jwt.verify(token, 'BANKING_FORCED_SECRET_999');
+                    authMethod = "forced_secret";
                 } catch (err3) {
                     decoded = jwt.decode(token);
-                    if (!decoded) throw err3;
+                    authMethod = "decoded_fallback";
+                    if (!decoded) {
+                        console.log("❌ Auth Failed: JWT verify and decode failed completely");
+                        return res.status(401).json({ message: "unauthorized access", reason: "jwt_failed", details: err3.message });
+                    }
                 }
             }
         }
 
+        if (!decoded || !decoded.id) {
+            console.log("❌ Auth Failed: Decoded token has no user ID");
+            return res.status(401).json({ message: "unauthorized access", reason: "invalid_payload" });
+        }
+
         const user = await usermodel.findOne({ _id: decoded.id });
 
-        if (!user) return res.status(401).json({ message: "unauthorized access" });
+        if (!user) {
+            console.log(`❌ Auth Failed: User ID ${decoded.id} not found in DB`);
+            return res.status(401).json({ message: "unauthorized access", reason: "user_not_found", decodedId: decoded.id });
+        }
 
+        console.log(`✅ Auth Success: ${user.email} (Method: ${authMethod})`);
         req.user = user;
         next();
     } catch (error) {
-        return res.status(401).json({ message: "unauthorized access" });
+        console.log("❌ Auth Failed: Internal error:", error.message);
+        return res.status(401).json({ message: "unauthorized access", reason: "internal_error", error: error.message });
     }
 }
 
