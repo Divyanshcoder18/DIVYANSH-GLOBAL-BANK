@@ -104,7 +104,6 @@ function Dashboard() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedRecipient, setScannedRecipient] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [successData, setSuccessData] = useState(null);
 
   // MOBILE INTERACTIVITY STATE
