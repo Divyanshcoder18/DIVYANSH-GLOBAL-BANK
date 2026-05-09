@@ -86,9 +86,9 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
                 {step === 1 ? <Plus size={24} /> : <QrCode size={24} />}
               </div>
               <div>
-                <h2 className="text-xl font-bold">{step === 1 ? "Deposit Real Money" : "Pay via Instamojo Gateway"}</h2>
+                <h2 className="text-xl font-bold">{step === 1 ? "Deposit Real Money" : "Pay via Direct UPI QR"}</h2>
                 <p className="text-slate-500 text-sm">
-                  {step === 1 ? "Enter deposit amount" : "Secure UPI, Cards, and Netbanking"}
+                  {step === 1 ? "Enter deposit amount" : "Fast & Secure UPI Transfer"}
                 </p>
               </div>
             </div>
