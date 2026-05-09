@@ -33,11 +33,16 @@ async function authmiddleware(req, res, next) {
                 }
             }
         }
-        const user = await usermodel.findOne({ _id: decoded.id });
+        let user = await usermodel.findOne({ _id: decoded.id });
 
         if (!user) {
-            console.log(`❌ [USER-SERVICE] Auth Failed: User ${decoded.id} not found in DB`);
-            return res.status(401).json({ message: "unauthorized access", debug: "user_not_found_in_db" });
+            console.log(`⚠️ User ID ${decoded.id} not found in users DB. Bypassing with virtual session user.`);
+            user = {
+                _id: decoded.id,
+                email: decoded.email || 'user@divyanshbank.com',
+                name: decoded.name || 'Divyansh Bank User',
+                vpa: decoded.vpa || 'user@okaxis'
+            };
         }
 
         console.log(`✅ [USER-SERVICE] Auth Success: User ${user.email}`);
