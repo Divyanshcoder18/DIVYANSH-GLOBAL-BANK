@@ -253,7 +253,7 @@ function Dashboard() {
 
   return (
     <div 
-      className="min-h-screen bg-slate-950 text-white p-4 md:p-8 pb-24 md:pb-8 relative overflow-hidden"
+      className="min-h-screen bg-slate-950 text-white p-4 md:p-8 pb-24 md:pb-8 relative overflow-x-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
