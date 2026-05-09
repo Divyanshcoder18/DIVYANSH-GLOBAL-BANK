@@ -28,7 +28,7 @@ function Login() {
       // 5. THE SUCCESS: If backend says OK, we update our Global Context
       login(response.data.user, response.data.token);
 
-      toast.success('Welcome back to Apex Digital Portfolio!');
+      toast.success('Welcome back to Divyansh Global Bank!');
       navigate('/dashboard'); // Move to the dashboard automatically
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed. Check credentials.');
@@ -45,7 +45,7 @@ function Login() {
         animate={{ opacity: 1, scale: 1 }}
         className="max-w-md w-full bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl"
       >
-        <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">Apex Digital</h2>
+        <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">Divyansh Bank</h2>
         <p className="text-slate-400 mb-8 font-medium">Educational Financial & IT Portfolio Simulation.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -26,7 +26,7 @@ function Register() {
       // 2. AUTO LOGIN: Use the login function to save the new user and token
       login(response.data.user, response.data.token);
 
-      toast.success('Welcome to Apex Global Bank! Your journey begins.');
+      toast.success('Welcome to Divyansh Global Bank! Your journey begins.');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed. Try again.');

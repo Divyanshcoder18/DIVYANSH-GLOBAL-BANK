@@ -19,7 +19,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
     }
     
     // Generate direct peer-to-peer UPI deposit link to BHARATPE2F0X0Q2H0C26763@unitype
-    const directUpiLink = `upi://pay?pa=BHARATPE2F0X0Q2H0C26763@unitype&pn=${encodeURIComponent('APEX Global Bank')}&am=${parseFloat(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent('Apex Bank Deposit')}`;
+    const directUpiLink = `upi://pay?pa=BHARATPE2F0X0Q2H0C26763@unitype&pn=${encodeURIComponent('Divyansh Global Bank')}&am=${parseFloat(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent('Divyansh Bank Deposit')}`;
     setUpiIntentUrl(directUpiLink);
     setStep(2);
   };
@@ -185,7 +185,7 @@ function DepositModal({ isOpen, onClose, accountId, userEmail, onSuccess }) {
 
                    {/* Alternative Limit Bypass Button */}
                    <a
-                     href={`upi://pay?pa=BHARATPE2F0X0Q2H0C26763@unitype&pn=${encodeURIComponent('APEX Global Bank')}&cu=INR&tn=${encodeURIComponent('Deposit')}`}
+                     href={`upi://pay?pa=BHARATPE2F0X0Q2H0C26763@unitype&pn=${encodeURIComponent('Divyansh Global Bank')}&cu=INR&tn=${encodeURIComponent('Deposit')}`}
                      className="w-full bg-amber-600/10 hover:bg-amber-600/20 border border-amber-600/30 text-amber-400 font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 text-xs"
                    >
                      <AlertCircle size={14} />

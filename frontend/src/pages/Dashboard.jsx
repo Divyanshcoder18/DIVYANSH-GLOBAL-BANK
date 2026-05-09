@@ -61,7 +61,7 @@ function Dashboard() {
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
-    doc.text('APEX DIGITAL PORTFOLIO', 14, 25);
+    doc.text('DIVYANSH GLOBAL BANK', 14, 25);
     doc.setFontSize(10);
     doc.text('Simulation Transaction Log', 14, 32);
 
@@ -273,7 +273,7 @@ function Dashboard() {
         {/* HEADER SECTION */}
         <header className="flex justify-between items-center mb-10">
           <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter">Apex Portfolio</h1>
+            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter">Divyansh Bank</h1>
             <div className="flex items-center gap-3 mt-1">
               <p className="text-slate-400 text-sm">You have {accounts.length} active sandbox profile(s).</p>
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
@@ -377,7 +377,7 @@ function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-bold tracking-widest text-white/60 uppercase">
-                    {selectedAccount?.nickname || selectedAccount?.accountType || 'Apex Demo Card'}
+                    {selectedAccount?.nickname || selectedAccount?.accountType || 'Divyansh Bank Card'}
                   </p>
                   <p className="text-xs text-white/40 tracking-tighter">Account Number •• {selectedAccount?._id?.slice(-4)}</p>
                   <div className="flex items-center gap-2 mt-1 justify-end">
