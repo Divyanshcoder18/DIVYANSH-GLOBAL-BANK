@@ -79,12 +79,12 @@ const getUrls = (key, defaultInternal, defaultExternal) => [
 ];
 
 const SERVICES = [
-    { name: 'Auth Service', urls: getUrls('AUTH_SERVICE_URL', 'http://banking-auth-service:10000', 'https://banking-auth-service-qbwp.onrender.com') },
-    { name: 'User Service', urls: getUrls('USER_SERVICE_URL', 'http://banking-user-service:10000', 'https://banking-user-service.onrender.com') },
-    { name: 'Transaction Service', urls: getUrls('TRANSACTION_SERVICE_URL', 'http://banking-transaction-service:10000', 'https://banking-transaction-service.onrender.com') },
+    { name: 'Auth Service', urls: getUrls('AUTH_SERVICE_URL', 'http://banking-auth-service:10000', 'https://auth-service-qcl0.onrender.com') },
+    { name: 'User Service', urls: getUrls('USER_SERVICE_URL', 'http://banking-user-service:10000', 'https://divyansh-user-service.onrender.com') },
+    { name: 'Transaction Service', urls: getUrls('TRANSACTION_SERVICE_URL', 'http://banking-transaction-service:10000', 'https://transaction-service-dbg6.onrender.com') },
     { name: 'Notification Service', urls: getUrls('NOTIFICATION_SERVICE_URL', 'http://banking-notification-service:10000', 'https://divyansh-global-bank.onrender.com') },
-    { name: 'Fraud Service', urls: getUrls('FRAUD_SERVICE_URL', 'http://banking-fraud-service:10000', 'https://banking-fraud-service.onrender.com') },
-    { name: 'Audit Service', urls: getUrls('AUDIT_SERVICE_URL', 'http://banking-audit-service:10000', 'https://banking-audit-service.onrender.com') }
+    { name: 'Fraud Service', urls: getUrls('FRAUD_SERVICE_URL', 'http://banking-fraud-service:10000', 'https://fraud-service-mnja.onrender.com') },
+    { name: 'Audit Service', urls: getUrls('AUDIT_SERVICE_URL', 'http://banking-audit-service:10000', 'https://divyansh-audit-service.onrender.com') }
 ];
 
 // PROXY ROUTES (Using Direct External Links for 100% reliability)
@@ -99,12 +99,12 @@ const proxyOptions = (target) => ({
     }
 });
 
-app.use('/api/auth', createProxyMiddleware(proxyOptions(process.env.AUTH_SERVICE_URL || 'https://banking-auth-service-qbwp.onrender.com')));
-app.use('/api/users', createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'https://banking-user-service.onrender.com')));
-app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL || 'https://banking-transaction-service.onrender.com')));
+app.use('/api/auth', createProxyMiddleware(proxyOptions(process.env.AUTH_SERVICE_URL || 'https://auth-service-qcl0.onrender.com')));
+app.use('/api/users', createProxyMiddleware(proxyOptions(process.env.USER_SERVICE_URL || 'https://divyansh-user-service.onrender.com')));
+app.use('/api/transaction', createProxyMiddleware(proxyOptions(process.env.TRANSACTION_SERVICE_URL || 'https://transaction-service-dbg6.onrender.com')));
 app.use('/api/notification', createProxyMiddleware(proxyOptions(process.env.NOTIFICATION_SERVICE_URL || 'https://divyansh-global-bank.onrender.com')));
-app.use('/api/fraud', createProxyMiddleware(proxyOptions(process.env.FRAUD_SERVICE_URL || 'https://banking-fraud-service.onrender.com')));
-app.use('/api/audit', createProxyMiddleware(proxyOptions(process.env.AUDIT_SERVICE_URL || 'https://banking-audit-service.onrender.com')));
+app.use('/api/fraud', createProxyMiddleware(proxyOptions(process.env.FRAUD_SERVICE_URL || 'https://fraud-service-mnja.onrender.com')));
+app.use('/api/audit', createProxyMiddleware(proxyOptions(process.env.AUDIT_SERVICE_URL || 'https://divyansh-audit-service.onrender.com')));
 
 // RESILIENT HEALTH DASHBOARD
 app.get('/api/health/status', async (req, res) => {
