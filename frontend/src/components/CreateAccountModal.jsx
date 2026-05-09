@@ -21,7 +21,7 @@ function CreateAccountModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     try {
       await API.post('/users/create', { accountType, nickname });
-      toast.success(`Success! Your new ${accountType.toLowerCase()} simulator is ready.`);
+      toast.success(`Success! Your new ${accountType.toLowerCase()} account is ready.`);
       onSuccess();
       onClose();
       setNickname('');
@@ -59,8 +59,8 @@ function CreateAccountModal({ isOpen, onClose, onSuccess }) {
                 <Landmark size={24} />
               </div>
               <div>
-                <h2 className="text-xl font-bold uppercase tracking-tight">Create Simulator</h2>
-                <p className="text-slate-500 text-sm">Add a new financial simulation profile</p>
+                <h2 className="text-xl font-bold uppercase tracking-tight">Create Account</h2>
+                <p className="text-slate-500 text-sm">Add a new financial profile instantly</p>
               </div>
             </div>
 
@@ -89,7 +89,7 @@ function CreateAccountModal({ isOpen, onClose, onSuccess }) {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">Simulator Label (Optional)</label>
+                <label className="block text-sm font-bold text-slate-400 mb-2 ml-1">Account Nickname (Optional)</label>
                 <input 
                   type="text" 
                   value={nickname}
@@ -117,7 +117,7 @@ function CreateAccountModal({ isOpen, onClose, onSuccess }) {
                   <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <span>Start Simulation</span>
+                    <span>Create Account</span>
                   </>
                 )}
               </button>

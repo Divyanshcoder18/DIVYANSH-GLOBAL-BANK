@@ -275,21 +275,17 @@ function Dashboard() {
           <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
             <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter">Divyansh Bank</h1>
             <div className="flex items-center gap-3 mt-1">
-              <p className="text-slate-400 text-sm">You have {accounts.length} active sandbox profile(s).</p>
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
-                <ShieldCheck size={12} className="text-blue-400" />
-                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">Mode: Educational</span>
-              </div>
+              <p className="text-slate-400 text-sm">You have {accounts.length} active account(s).</p>
             </div>
           </motion.div>
-
+ 
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsCreateAccountOpen(true)}
               className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-600/20"
             >
               <Plus size={16} />
-              <span>Create Simulator</span>
+              <span>Create Account</span>
             </button>
             <button
               onClick={() => fetchDashboardData(true)}
