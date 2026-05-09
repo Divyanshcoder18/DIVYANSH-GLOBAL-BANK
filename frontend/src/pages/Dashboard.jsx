@@ -551,12 +551,19 @@ function Dashboard() {
                       key={tx._id}
                       className="group flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800/50 rounded-2xl hover:bg-slate-800/50 hover:border-slate-700 transition-all cursor-pointer"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl ${!isIncome ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <div className={`p-3 rounded-xl flex-shrink-0 ${!isIncome ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
                           {!isIncome ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
                         </div>
-                        <div>
-                          <p className="font-bold text-slate-200">
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-200 truncate" title={
+                            tx.idempotencyKey?.startsWith('bonus-') 
+                              ? "Welcome Bonus Credit" 
+                              : (tx.fromName === 'UPI Deposit' || tx.fromName?.includes('Deposit')
+                                  ? `Deposited to ${tx.toName || 'Account'}`
+                                  : (!isIncome ? `Sent to ${tx.toName || 'Account'}` : `Received from ${tx.fromName || 'Unknown'}`)
+                                )
+                          }>
                             {tx.idempotencyKey?.startsWith('bonus-') 
                               ? "Welcome Bonus Credit" 
                               : (tx.fromName === 'UPI Deposit' || tx.fromName?.includes('Deposit')
