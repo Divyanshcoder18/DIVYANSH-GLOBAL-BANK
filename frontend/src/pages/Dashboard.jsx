@@ -5,7 +5,7 @@ import API from '../api/axios';
 import { motion } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import { Wallet, ArrowUpRight, ArrowDownLeft, History, LogOut, Plus, RefreshCw, ChevronRight, Search, Filter, Download, Eye, EyeOff } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, History, LogOut, Plus, RefreshCw, ChevronRight, Search, Filter, Download, Eye, EyeOff, Home, ArrowUp } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import TransferModal from '../components/TransferModal';
 import DepositModal from '../components/DepositModal';
@@ -104,7 +104,54 @@ function Dashboard() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedRecipient, setScannedRecipient] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [successData, setSuccessData] = useState(null);
+
+  // MOBILE INTERACTIVITY STATE
+  const [pullStartY, setPullStartY] = useState(0);
+  const [pullMoveY, setPullMoveY] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // MOBILE SCROLL & PULL-TO-REFRESH LOGIC
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) {
+      setPullStartY(e.touches[0].clientY);
+      setIsPulling(true);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isPulling) return;
+    const y = e.touches[0].clientY;
+    const distance = y - pullStartY;
+    // Allow pulling down only if we are at the top
+    if (distance > 0 && distance < 150) {
+      setPullMoveY(distance);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isPulling) return;
+    if (pullMoveY > 80) {
+      await fetchDashboardData(true);
+    }
+    setPullStartY(0);
+    setPullMoveY(0);
+    setIsPulling(false);
+  };
 
   // 2. DATA FETCHING: The code that runs when the "water tap" is opened
   const fetchDashboardData = async (isRefresh = false) => {
@@ -205,7 +252,23 @@ function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-4 md:p-8">
+    <div 
+      className="min-h-screen bg-slate-950 text-white p-4 md:p-8 pb-24 md:pb-8 relative overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-Refresh Indicator */}
+      <motion.div 
+        className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none z-50"
+        animate={{ y: pullMoveY > 0 ? pullMoveY - 40 : -100, opacity: pullMoveY > 0 ? 1 : 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <div className={`bg-slate-800 border border-slate-700 rounded-full p-2 shadow-lg mt-4 ${pullMoveY > 80 ? 'text-blue-400' : 'text-slate-400'} ${refreshing ? 'animate-spin-slow text-blue-500' : ''}`}>
+          <RefreshCw size={20} />
+        </div>
+      </motion.div>
+
       <div className="max-w-5xl mx-auto">
 
         {/* HEADER SECTION */}
@@ -256,7 +319,7 @@ function Dashboard() {
         </header>
 
         {/* ACCOUNT SELECTOR CAROUSEL */}
-        <div className="mb-10 overflow-x-auto pb-4 hide-scrollbar">
+        <div className="mb-10 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
           <div className="flex gap-4">
             {accounts.map((acc) => {
               const Icon = getAccountIcon(acc.accountType);
@@ -267,7 +330,7 @@ function Dashboard() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedAccountId(acc._id)}
-                  className={`flex-shrink-0 w-64 p-6 rounded-[2rem] border transition-all text-left ${isActive
+                  className={`flex-shrink-0 w-64 p-6 rounded-[2rem] border transition-all text-left snap-center ${isActive
                     ? 'bg-blue-600 border-blue-400 shadow-xl shadow-blue-600/20'
                     : 'bg-slate-900 border-slate-800 hover:border-slate-700'
                     }`}
@@ -291,7 +354,7 @@ function Dashboard() {
             })}
             <button
               onClick={() => setIsCreateAccountOpen(true)}
-              className="flex-shrink-0 w-20 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-[2rem] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-slate-500 hover:text-blue-400"
+              className="flex-shrink-0 w-20 flex flex-col items-center justify-center border-2 border-dashed border-slate-800 rounded-[2rem] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-slate-500 hover:text-blue-400 snap-center"
             >
               <Plus size={24} />
             </button>
@@ -524,7 +587,7 @@ function Dashboard() {
                             e.stopPropagation();
                             downloadReceipt(tx);
                           }}
-                          className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all opacity-0 group-hover:opacity-100"
+                          className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
                           title="Download Receipt"
                         >
                           <Download size={16} />
@@ -599,6 +662,62 @@ function Dashboard() {
         data={successData} 
         onClose={() => setShowSuccess(false)} 
       />
+
+      {/* MOBILE BOTTOM NAVIGATION BAR */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-lg border-t border-slate-800 z-40 pb-safe">
+        <div className="flex justify-around items-center p-3">
+          <button 
+            onClick={() => scrollToTop()} 
+            className="flex flex-col items-center gap-1 text-blue-400 p-2"
+          >
+            <Home size={20} />
+            <span className="text-[10px] font-bold">Home</span>
+          </button>
+          
+          <button 
+            onClick={() => setIsTransferOpen(true)} 
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition-colors p-2"
+          >
+            <ArrowUpRight size={20} />
+            <span className="text-[10px] font-bold">Send</span>
+          </button>
+
+          <div className="relative -top-5">
+            <button 
+              onClick={() => setIsScannerOpen(true)}
+              className="bg-blue-600 text-white p-4 rounded-full shadow-lg shadow-blue-500/30 border-4 border-slate-950"
+            >
+              <Camera size={24} />
+            </button>
+          </div>
+
+          <button 
+            onClick={() => setIsDepositOpen(true)} 
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition-colors p-2"
+          >
+            <Plus size={20} />
+            <span className="text-[10px] font-bold">Deposit</span>
+          </button>
+
+          <button 
+            onClick={() => setIsWithdrawOpen(true)} 
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition-colors p-2"
+          >
+            <ArrowDownLeft size={20} />
+            <span className="text-[10px] font-bold">Withdraw</span>
+          </button>
+        </div>
+      </div>
+
+      {/* SCROLL TO TOP BUTTON (Mobile/Desktop) */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: showScrollTop ? 1 : 0, scale: showScrollTop ? 1 : 0 }}
+        onClick={scrollToTop}
+        className="fixed bottom-24 md:bottom-8 right-4 md:right-8 bg-slate-800/80 backdrop-blur border border-slate-700 text-white p-3 rounded-full shadow-lg z-30 hover:bg-slate-700 transition-all"
+      >
+        <ArrowUp size={20} />
+      </motion.button>
 
       <Toaster position="top-right" />
     </div>

@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+  /* Prevent pull-to-refresh on entire html by default if we want custom pull-to-refresh, but usually overscroll-behavior-y: none is good */
+  overscroll-behavior-y: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom animations for Pull to Refresh and interactions */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 1.5s linear infinite;
+}
